@@ -1,0 +1,312 @@
+type Value = 
+ variant {
+   "bool": bool;
+   float: float64;
+   "int": int;
+   "nat": nat;
+   "null";
+   "text": text;
+ };
+type UserRole__1 = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserRole = 
+ variant {
+   editor;
+   owner;
+   viewer;
+ };
+type UserProfile = 
+ record {
+   favoriteCookbooks: vec text;
+   invitations: vec Invitation;
+   language: text;
+   name: text;
+   requireApprovalBeforeJoining: bool;
+ };
+type UserApprovalInfo = 
+ record {
+   "principal": principal;
+   status: ApprovalStatus;
+ };
+type Time = int;
+type Result__1 = 
+ variant {
+   err: Error;
+   ok;
+ };
+type Result = 
+ record {
+   hasMore: bool;
+   rows: vec vec Cell;
+ };
+type RecipeSaveLog = 
+ record {
+   afterSnapshot: text;
+   beforeSnapshot: text;
+   cookbookId: text;
+   dataSent: text;
+   errors: opt text;
+   fieldDifferences: text;
+   recipesArrayStatus: text;
+   timestamp: Time;
+   userPrincipal: principal;
+ };
+type Recipe = 
+ record {
+   author: text;
+   authorPrincipal: principal;
+   created_at: Time;
+   id: text;
+   imageUrl: opt text;
+   ingredients: vec Ingredient;
+   instructions: text;
+   tags: vec text;
+   title: text;
+   updated_at: Time;
+ };
+type RSVP = 
+ record {
+   attending: bool;
+   inviteCode: text;
+   name: text;
+   timestamp: Time;
+ };
+type PurgeResult = 
+ record {
+   errors: vec text;
+   totalImageFieldsRemoved: nat;
+   totalRecipesCleaned: nat;
+ };
+type PredefinedTag = 
+ record {
+   en: text;
+   id: text;
+   sl: text;
+ };
+type OperationSummary = 
+ record {
+   detailsLink: text;
+   operationType: text;
+   result: text;
+   timestamp: Time;
+ };
+type InviteCode = 
+ record {
+   code: text;
+   created: Time;
+   used: bool;
+ };
+type Invitation = 
+ record {
+   cookbookId: text;
+   invitedAt: Time;
+   invitedBy: principal;
+   role: UserRole;
+ };
+type Ingredient = 
+ record {
+   ingredientType: variant {
+                     ingredient;
+                     section;
+                   };
+   "text": text;
+ };
+type ImageUploadLog = 
+ record {
+   duration: nat;
+   fileName: text;
+   fileSize: nat;
+   isMobile: bool;
+   mimeType: text;
+   platform: text;
+   result: variant {
+             failure: text;
+             success: text;
+           };
+   timestamp: Time;
+   userAgent: text;
+   userPrincipal: principal;
+ };
+type Error = 
+ variant {
+   AmbiguousAttribute: record {
+                         field: text;
+                         sources: vec text;
+                       };
+   FrontendOriginMismatch: record {
+                             expected: vec text;
+                             got: text;
+                           };
+   FrontendOriginsNotConfigured;
+   MalformedCandid;
+   MissingField: text;
+   MixedSsoSources: record {
+                      otherKeys: vec text;
+                      ssoKeys: vec text;
+                    };
+   NoAttributes;
+   Stale: record {ageNs: nat;};
+   UnknownNonce;
+   UntrustedSsoSource: record {domain: text;};
+ };
+type DebugLogs = 
+ record {
+   cookbookSafetyLogs: vec CookbookSafetyLog;
+   imageUploadLogs: vec ImageUploadLog;
+   last20Operations: vec OperationSummary;
+   recipeSaveLogs: vec RecipeSaveLog;
+ };
+type CookbookSafetyLog = 
+ record {
+   details: text;
+   operation: text;
+   result: text;
+   timestamp: Time;
+   userPrincipal: principal;
+ };
+type Cell = 
+ record {
+   name: text;
+   value: Value;
+ };
+type BookMeta = 
+ record {
+   created_at: Time;
+   customTags: vec text;
+   id: text;
+   owner: principal;
+   title: text;
+   useDefaultTags: bool;
+ };
+type ApprovalStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type AdminDashboardStats = 
+ record {
+   acceptedInvitations: nat;
+   dailyGrowth: record {
+                  cookbooks: nat;
+                  recipes: nat;
+                  users: nat;
+                };
+   pendingInvitations: nat;
+   perBookStats:
+    vec
+     record {
+       bookId: text;
+       memberCount: nat;
+       recipeCount: nat;
+       roleBreakdown: record {
+                        editors: nat;
+                        owners: nat;
+                        viewers: nat;
+                      };
+       title: text;
+     };
+   storageUsage: record {
+                   totalAssets: nat;
+                   totalImages: nat;
+                 };
+   topActiveUsers:
+    vec record {
+          name: text;
+          "principal": principal;
+          recipeCount: nat;
+        };
+   totalCookbooks: nat;
+   totalRecipes: nat;
+   totalUsers: nat;
+   weeklyGrowth: record {
+                   cookbooks: nat;
+                   recipes: nat;
+                   users: nat;
+                 };
+ };
+service : {
+  _initialize_access_control: () -> ();
+  _internet_identity_sign_in_finish: () -> (Result__1);
+  _internet_identity_sign_in_start: () -> (blob);
+  acceptInvitation: (cookbookId: text) -> ();
+  addRecipe: (bookId: text, title: text, ingredients: vec Ingredient,
+   instructions: text, tags: vec text, imageUrl: opt text) -> (text);
+  assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
+  changeUserRole: (bookId: text, user: principal, newRole: UserRole) -> ();
+  clearDebugLogs: () -> ();
+  copyRecipe: (sourceBookId: text, recipeId: text, targetBookId: text) ->
+   (text);
+  createBook: (title: text, useDefaultTags: bool, customTags: vec text) ->
+   (text);
+  declineInvitation: (cookbookId: text) -> ();
+  deleteBook: (bookId: text) -> ();
+  deleteRecipe: (bookId: text, recipeId: text) -> ();
+  editRecipe: (bookId: text, recipeId: text, title: text, ingredients:
+   vec Ingredient, instructions: text, tags: vec text, imageUrl: opt text) ->
+   ();
+  execute: (qJson: text) -> (Result) query;
+  favoriteCookbook: (cookbookId: text) -> ();
+  generateInviteCode: () -> (text);
+  getAdminDashboardStats: () -> (AdminDashboardStats) query;
+  getAllRSVPs: () -> (vec RSVP) query;
+  getAllTags: (bookId: text) -> (vec text) query;
+  getAppVersion: () -> (text) query;
+  getBookMeta: (bookId: text) -> (opt BookMeta) query;
+  getBookTags: (bookId: text) ->
+   (record {
+      customTags: vec text;
+      useDefaultTags: bool;
+    }) query;
+  getBooksForUser: () ->
+   (vec
+     record {
+       created_at: Time;
+       customTags: vec text;
+       id: text;
+       is_favorite: bool;
+       owner: principal;
+       title: text;
+       useDefaultTags: bool;
+     }) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole__1) query;
+  getDebugLogs: () -> (DebugLogs) query;
+  getInviteCodes: () -> (vec InviteCode) query;
+  getPendingInvitations: () -> (vec Invitation) query;
+  getPredefinedTags: () -> (vec PredefinedTag) query;
+  getRecipe: (bookId: text, recipeId: text) -> (opt Recipe) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  getUserRole: (bookId: text) -> (opt UserRole) query;
+  initializeAccessControl: () -> ();
+  inviteUser: (bookId: text, user: principal, role: UserRole) -> (text);
+  isCallerAdmin: () -> (bool) query;
+  isCallerApproved: () -> (bool) query;
+  isPredefinedTag: (tag: text) -> (bool) query;
+  leaveCookbook: (bookId: text) -> ();
+  listApprovals: () -> (vec UserApprovalInfo) query;
+  listBookMembers: (bookId: text) ->
+   (vec record {
+          name: text;
+          "principal": principal;
+          role: UserRole;
+        }) query;
+  listRecipes: (bookId: text) -> (vec Recipe) query;
+  moveRecipe: (sourceBookId: text, recipeId: text, targetBookId: text) -> ();
+  purgeRecipeImages: () -> (PurgeResult);
+  removeUser: (bookId: text, user: principal) -> ();
+  renameBook: (bookId: text, newTitle: text) -> ();
+  requestApproval: () -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  schema: () -> (text) query;
+  setAppVersion: (version: text) -> ();
+  setApproval: (user: principal, status: ApprovalStatus) -> ();
+  submitRSVP: (name: text, attending: bool, inviteCode: text) -> ();
+  unfavoriteCookbook: (cookbookId: text) -> ();
+  updateBookTags: (bookId: text, useDefaultTags: bool, customTags:
+   vec text) -> ();
+}

@@ -1,0 +1,322 @@
+// Version: 4.0.0
+type AccessControlState__598944673 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__386906547<Principal, AccessControlUserRole__911270882>
+  };
+type AccessControlUserRole__911270882 = {#admin; #guest; #user};
+type ApprovalStatus__91238188 = {#approved; #pending; #rejected};
+type ApprovalStatus__944573617 = {#approved; #pending; #rejected};
+type BookMeta__111824466 =
+  {
+    created_at : Time__30997584;
+    customTags : [Text];
+    id : Text;
+    owner : Principal;
+    title : Text;
+    useDefaultTags : Bool
+  };
+type BookMeta__337072332 =
+  {
+    created_at : Time__38388344;
+    customTags : [Text];
+    id : Text;
+    owner : Principal;
+    title : Text;
+    useDefaultTags : Bool
+  };
+type CookbookSafetyLog__728903713 =
+  {
+    details : Text;
+    operation : Text;
+    result : Text;
+    timestamp : Time__30997584;
+    userPrincipal : Principal
+  };
+type CookbookSafetyLog__929668236 =
+  {
+    details : Text;
+    operation : Text;
+    result : Text;
+    timestamp : Time__38388344;
+    userPrincipal : Principal
+  };
+type Data__265875254<K, V> = {var count : Nat__58649523; kvs : [var ?(K, V)]};
+type ImageUploadLog__131405012 =
+  {
+    duration : Nat;
+    fileName : Text;
+    fileSize : Nat;
+    isMobile : Bool;
+    mimeType : Text;
+    platform : Text;
+    result : {#failure : Text; #success : Text};
+    timestamp : Time__30997584;
+    userAgent : Text;
+    userPrincipal : Principal
+  };
+type ImageUploadLog__464539289 =
+  {
+    duration : Nat;
+    fileName : Text;
+    fileSize : Nat;
+    isMobile : Bool;
+    mimeType : Text;
+    platform : Text;
+    result : {#failure : Text; #success : Text};
+    timestamp : Time__38388344;
+    userAgent : Text;
+    userPrincipal : Principal
+  };
+type Ingredient__1041679390 =
+  {ingredientType : {#ingredient; #section}; text : Text};
+type Ingredient__830977812 =
+  {ingredientType : {#ingredient; #section}; text : Text};
+type Int__616954475 = Int;
+type Int__895066125 = Int__616954475;
+type Internal__161573640<K, V> =
+  {children : [var ?Node__430031793<K, V>]; data : Data__265875254<K, V>};
+type Invitation__141447427 =
+  {
+    cookbookId : Text;
+    invitedAt : Time__38388344;
+    invitedBy : Principal;
+    role : UserRole__599675725
+  };
+type Invitation__873840217 =
+  {
+    cookbookId : Text;
+    invitedAt : Time__30997584;
+    invitedBy : Principal;
+    role : UserRole__291022307
+  };
+type InviteCode__179565162 =
+  {code : Text; created : Time__30997584; used : Bool};
+type InviteCode__310469944 =
+  {code : Text; created : Time__30997584; used : Bool};
+type InviteLinksSystemState__269001759 =
+  {
+    var inviteCodes : Map__386906547<Text, InviteCode__310469944>;
+    var rsvps : Map__386906547<Text, RSVP__29211097>
+  };
+type Leaf__1045638083<K, V> = {data : Data__265875254<K, V>};
+type Map__13625999<K, V> =
+  {var root : Node__430031793<K, V>; var size : Nat__58649523};
+type Map__334413012<K, V> = {root : Tree__4145630<K, V>; size : Nat};
+type Map__386906547<K, V> = Map__670138087<K, V>;
+type Map__670138087<K, V> = Map__13625999<K, V>;
+type Nat__58649523 = Nat__920180692;
+type Nat__920180692 = Nat;
+type NewActor__194518989 =
+  {
+    ADMIN_PRINCIPAL_IDS : [Text];
+    ANONYMOUS_PRINCIPAL : Principal;
+    MAX_IMAGE_URL_SIZE : Nat;
+    accessControlState : AccessControlState__598944673;
+    var appVersion : Text;
+    approvalState : UserApprovalState__837964822;
+    var bookPermissions :
+      Map__334413012<Text, Map__334413012<Principal, UserRole__291022307>>;
+    var books : Map__334413012<Text, BookMeta__111824466>;
+    inviteState : InviteLinksSystemState__269001759;
+    predefinedTags : [PredefinedTag__951665938];
+    var recipes :
+      Map__334413012<Text, Map__334413012<Text, Recipe__684044491>>;
+    var stableCookbookSafetyLogs : [CookbookSafetyLog__728903713];
+    var stableImageUploadLogs : [ImageUploadLog__131405012];
+    var stableLast20Operations : [OperationSummary__995328898];
+    var stableRecipeSaveLogs : [RecipeSaveLog__320529889];
+    var userProfiles : Map__334413012<Principal, UserProfile__1022124389>
+  };
+type Node__430031793<K, V> =
+  {#internal : Internal__161573640<K, V>; #leaf : Leaf__1045638083<K, V>};
+type OldAccessControlState__99364683 =
+  {
+    var adminAssigned : Bool;
+    var userRoles :
+      Map__334413012<Principal, AccessControlUserRole__911270882>
+  };
+type OldActor__213053430 =
+  {
+    ADMIN_PRINCIPAL_IDS : [Text];
+    ANONYMOUS_PRINCIPAL : Principal;
+    MAX_IMAGE_URL_SIZE : Nat;
+    accessControlState : OldAccessControlState__99364683;
+    var appVersion : Text;
+    approvalState : OldUserApprovalState__886444211;
+    var bookPermissions :
+      Map__334413012<Text, Map__334413012<Principal, UserRole__291022307>>;
+    var books : Map__334413012<Text, BookMeta__111824466>;
+    inviteState : OldInviteLinksSystemState__159265142;
+    predefinedTags : [PredefinedTag__951665938];
+    var recipes :
+      Map__334413012<Text, Map__334413012<Text, Recipe__684044491>>;
+    var stableCookbookSafetyLogs : [CookbookSafetyLog__728903713];
+    var stableImageUploadLogs : [ImageUploadLog__131405012];
+    var stableLast20Operations : [OperationSummary__995328898];
+    var stableRecipeSaveLogs : [RecipeSaveLog__320529889];
+    storage :
+      {var authorizedPrincipals : [Principal]; var blobTodeletete : [Blob]};
+    var userProfiles : Map__334413012<Principal, UserProfile__1022124389>
+  };
+type OldInviteLinksSystemState__159265142 =
+  {
+    var inviteCodes : Map__334413012<Text, InviteCode__310469944>;
+    var rsvps : Map__334413012<Text, RSVP__29211097>
+  };
+type OldUserApprovalState__886444211 =
+  {var approvalStatus : Map__334413012<Principal, ApprovalStatus__91238188>};
+type OperationSummary__418453359 =
+  {
+    detailsLink : Text;
+    operationType : Text;
+    result : Text;
+    timestamp : Time__38388344
+  };
+type OperationSummary__995328898 =
+  {
+    detailsLink : Text;
+    operationType : Text;
+    result : Text;
+    timestamp : Time__30997584
+  };
+type PredefinedTag__238133656 = {en : Text; id : Text; sl : Text};
+type PredefinedTag__951665938 = {en : Text; id : Text; sl : Text};
+type RSVP__1062564422 =
+  {
+    attending : Bool;
+    inviteCode : Text;
+    name : Text;
+    timestamp : Time__30997584
+  };
+type RSVP__29211097 =
+  {
+    attending : Bool;
+    inviteCode : Text;
+    name : Text;
+    timestamp : Time__30997584
+  };
+type RecipeSaveLog__320529889 =
+  {
+    afterSnapshot : Text;
+    beforeSnapshot : Text;
+    cookbookId : Text;
+    dataSent : Text;
+    errors : ?Text;
+    fieldDifferences : Text;
+    recipesArrayStatus : Text;
+    timestamp : Time__30997584;
+    userPrincipal : Principal
+  };
+type RecipeSaveLog__5388336 =
+  {
+    afterSnapshot : Text;
+    beforeSnapshot : Text;
+    cookbookId : Text;
+    dataSent : Text;
+    errors : ?Text;
+    fieldDifferences : Text;
+    recipesArrayStatus : Text;
+    timestamp : Time__38388344;
+    userPrincipal : Principal
+  };
+type Recipe__552182475 =
+  {
+    author : Text;
+    authorPrincipal : Principal;
+    created_at : Time__38388344;
+    id : Text;
+    imageUrl : ?Text;
+    ingredients : [Ingredient__830977812];
+    instructions : Text;
+    tags : [Text];
+    title : Text;
+    updated_at : Time__38388344
+  };
+type Recipe__684044491 =
+  {
+    author : Text;
+    authorPrincipal : Principal;
+    created_at : Time__30997584;
+    id : Text;
+    imageUrl : ?Text;
+    ingredients : [Ingredient__1041679390];
+    instructions : Text;
+    tags : [Text];
+    title : Text;
+    updated_at : Time__30997584
+  };
+type Time__1031799312 = Int__895066125;
+type Time__30997584 = Time__1031799312;
+type Time__38388344 = Int;
+type Tree__4145630<K, V> =
+  {
+    #black : (Tree__4145630<K, V>, K, V, Tree__4145630<K, V>);
+    #leaf;
+    #red : (Tree__4145630<K, V>, K, V, Tree__4145630<K, V>)
+  };
+type UserApprovalState__837964822 =
+  {var approvalStatus : Map__386906547<Principal, ApprovalStatus__91238188>};
+type UserProfile__1022124389 =
+  {
+    favoriteCookbooks : [Text];
+    invitations : [Invitation__873840217];
+    language : Text;
+    name : Text;
+    requireApprovalBeforeJoining : Bool
+  };
+type UserProfile__491224006 =
+  {
+    favoriteCookbooks : [Text];
+    invitations : [Invitation__141447427];
+    language : Text;
+    name : Text;
+    requireApprovalBeforeJoining : Bool
+  };
+type UserRole__291022307 = {#editor; #owner; #viewer};
+type UserRole__599675725 = {#editor; #owner; #viewer};
+type UserRole__686137147 = {#admin; #guest; #user};
+{
+  "20260801_224132" : (old : OldActor__213053430) -> NewActor__194518989
+}
+actor  {
+  stable ADMIN_PRINCIPAL_IDS : [Text];
+  stable ANONYMOUS_PRINCIPAL : Principal;
+  stable MAX_IMAGE_URL_SIZE : Nat;
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__386906547<Principal, UserRole__686137147>
+    };
+  stable var appVersion : Text;
+  stable approvalState :
+    {
+      var approvalStatus :
+        Map__386906547<Principal, ApprovalStatus__944573617>
+    };
+  stable var bookPermissions :
+    {
+      root :
+        Tree__4145630<Text, Map__334413012<Principal, UserRole__599675725>>;
+      size : Nat
+    };
+  stable var books :
+    {root : Tree__4145630<Text, BookMeta__337072332>; size : Nat};
+  stable inviteState :
+    {
+      var inviteCodes : Map__386906547<Text, InviteCode__179565162>;
+      var rsvps : Map__386906547<Text, RSVP__1062564422>
+    };
+  stable predefinedTags : [PredefinedTag__238133656];
+  stable var recipes :
+    {
+      root : Tree__4145630<Text, Map__334413012<Text, Recipe__552182475>>;
+      size : Nat
+    };
+  stable var stableCookbookSafetyLogs : [CookbookSafetyLog__929668236];
+  stable var stableImageUploadLogs : [ImageUploadLog__464539289];
+  stable var stableLast20Operations : [OperationSummary__418453359];
+  stable var stableRecipeSaveLogs : [RecipeSaveLog__5388336];
+  stable var userProfiles :
+    {root : Tree__4145630<Principal, UserProfile__491224006>; size : Nat}
+};
