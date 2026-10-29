@@ -8,11 +8,13 @@ import {
   toRecipeData,
 } from "../lib/recipe";
 import { useActor } from "./useActor";
+import { useInternetIdentity } from "./useInternetIdentity";
 
 const RECIPES_KEY = ["recipes"];
 
 export function useRecipes() {
   const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
 
   return useQuery<RecipeData[]>({
     queryKey: RECIPES_KEY,
@@ -21,7 +23,8 @@ export function useRecipes() {
       const recipes = await actor.getAllRecipes();
       return recipes.map(toRecipeData);
     },
-    enabled: !!actor && !isFetching,
+    // Only signed in: anonymous calls are always refused.
+    enabled: !!identity && !!actor && !isFetching,
     // An "Access denied" error won't go away by retrying.
     retry: false,
   });
