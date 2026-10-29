@@ -26,17 +26,14 @@ import { type Route, goBack, navigate } from "../hooks/useRoute";
 import BackupDialog from "./BackupDialog";
 import { CyclesDialog } from "./CyclesDialog";
 import ImportTextDialog from "./ImportTextDialog";
-import { PrincipalDisplay } from "./PrincipalDisplay";
 
 export default function Header({ route }: { route: Route }) {
-  const { identity, clear } = useInternetIdentity();
+  const { clear } = useInternetIdentity();
   const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
   const [cyclesOpen, setCyclesOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-
-  const principal = identity?.getPrincipal().toText() ?? "";
 
   const handleLogout = () => {
     clear();
@@ -95,11 +92,7 @@ export default function Header({ route }: { route: Route }) {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72">
-                <div className="px-2 py-1.5">
-                  <PrincipalDisplay principal={principal} />
-                </div>
-                <DropdownMenuSeparator />
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem
                   onClick={() => navigate({ name: "airFryer" })}
                   className="cursor-pointer py-2.5"
@@ -126,7 +119,7 @@ export default function Header({ route }: { route: Route }) {
                   className="cursor-pointer py-2.5"
                 >
                   <Fuel className="mr-3 h-4 w-4 text-muted-foreground" />
-                  Cikli
+                  Cycles
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

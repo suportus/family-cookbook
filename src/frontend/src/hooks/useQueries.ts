@@ -168,3 +168,18 @@ export function useGetCycleBalance(enabled: boolean) {
     enabled: enabled && !!actor && !isFetching,
   });
 }
+
+// Update call (reads the frontend's status), so it is cached for 5 minutes.
+export function useGetFrontendCycleBalance(enabled: boolean) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<bigint | null>({
+    queryKey: ["frontendCycleBalance"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not initialized");
+      return actor.getFrontendCycleBalance();
+    },
+    enabled: enabled && !!actor && !isFetching,
+    staleTime: 5 * 60 * 1000,
+  });
+}

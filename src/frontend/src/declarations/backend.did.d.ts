@@ -36,6 +36,7 @@ export interface _SERVICE {
   'deleteRecipe' : ActorMethod<[bigint], undefined>,
   'getAllRecipes' : ActorMethod<[], Array<Recipe>>,
   'getCycleBalance' : ActorMethod<[], bigint>,
+  'getFrontendCycleBalance' : ActorMethod<[], [] | [bigint]>,
   'getRecipe' : ActorMethod<[bigint], [] | [Recipe]>,
   'importRecipes' : ActorMethod<[Array<ImportItem>], Array<Recipe>>,
   'listUsers' : ActorMethod<[], Array<Principal>>,

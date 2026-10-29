@@ -43,6 +43,7 @@ export interface backendInterface {
     deleteRecipe(id: bigint): Promise<void>;
     getAllRecipes(): Promise<Array<Recipe>>;
     getCycleBalance(): Promise<bigint>;
+    getFrontendCycleBalance(): Promise<bigint | null>;
     getRecipe(id: bigint): Promise<Recipe | null>;
     importRecipes(items: Array<ImportItem>): Promise<Array<Recipe>>;
     listUsers(): Promise<Array<Principal>>;

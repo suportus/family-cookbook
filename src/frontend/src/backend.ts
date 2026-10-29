@@ -77,6 +77,7 @@ export interface backendInterface {
     deleteRecipe(id: bigint): Promise<void>;
     getAllRecipes(): Promise<Array<Recipe>>;
     getCycleBalance(): Promise<bigint>;
+    getFrontendCycleBalance(): Promise<bigint | null>;
     getRecipe(id: bigint): Promise<Recipe | null>;
     importRecipes(items: Array<ImportItem>): Promise<Array<Recipe>>;
     listUsers(): Promise<Array<Principal>>;
@@ -106,12 +107,16 @@ export class Backend implements backendInterface {
         const result = await this.actor.getCycleBalance();
         return result;
     }
-    async getRecipe(arg0: bigint): Promise<Recipe | null> {
-        const result = await this.actor.getRecipe(arg0);
+    async getFrontendCycleBalance(): Promise<bigint | null> {
+        const result = await this.actor.getFrontendCycleBalance();
         return from_candid_opt_n1(result);
     }
+    async getRecipe(arg0: bigint): Promise<Recipe | null> {
+        const result = await this.actor.getRecipe(arg0);
+        return from_candid_opt_n2(result);
+    }
     async importRecipes(arg0: Array<ImportItem>): Promise<Array<Recipe>> {
-        const result = await this.actor.importRecipes(to_candid_vec_n2(arg0));
+        const result = await this.actor.importRecipes(to_candid_vec_n3(arg0));
         return result;
     }
     async listUsers(): Promise<Array<Principal>> {
@@ -127,13 +132,16 @@ export class Backend implements backendInterface {
         return result;
     }
 }
-function from_candid_opt_n1(value: [] | [_Recipe]): Recipe | null {
+function from_candid_opt_n1(value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function to_candid_ImportItem_n3(value: ImportItem): _ImportItem {
-    return to_candid_record_n4(value);
+function from_candid_opt_n2(value: [] | [_Recipe]): Recipe | null {
+    return value.length === 0 ? null : value[0];
 }
-function to_candid_record_n4(value: {
+function to_candid_ImportItem_n4(value: ImportItem): _ImportItem {
+    return to_candid_record_n5(value);
+}
+function to_candid_record_n5(value: {
     title: string;
     body: string;
     createdAt?: bigint;
@@ -154,8 +162,8 @@ function to_candid_record_n4(value: {
         updatedAt: value.updatedAt ? candid_some(value.updatedAt) : candid_none()
     };
 }
-function to_candid_vec_n2(value: Array<ImportItem>): Array<_ImportItem> {
-    return value.map((x)=>to_candid_ImportItem_n3(x));
+function to_candid_vec_n3(value: Array<ImportItem>): Array<_ImportItem> {
+    return value.map((x)=>to_candid_ImportItem_n4(x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

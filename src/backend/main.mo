@@ -7,6 +7,7 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Cycles "mo:core/Cycles";
+import IC "ic:aaaaa-aa";
 
 actor Kuharica {
   // Only principals in this list may read or write data.
@@ -45,10 +46,28 @@ actor Kuharica {
     allowedUsers.keys().toArray();
   };
 
-  // Cycle balance of this (backend) canister, shown in the Cikli dialog.
+  // Cycle balance of this (backend) canister, shown in the Cycles dialog.
   public shared query ({ caller }) func getCycleBalance() : async Nat {
     requireUser(caller);
     Cycles.balance();
+  };
+
+  // Cycle balance of the frontend canister. Only a controller may read a
+  // canister's status, so this works once the backend is a controller of the
+  // frontend; otherwise it returns null.
+  public shared ({ caller }) func getFrontendCycleBalance() : async ?Nat {
+    requireUser(caller);
+    switch (Runtime.envVar<system>("PUBLIC_CANISTER_ID:frontend")) {
+      case (?id) {
+        try {
+          let status = await IC.canister_status({
+            canister_id = Principal.fromText(id);
+          });
+          ?status.cycles;
+        } catch (_) { null };
+      };
+      case (null) { null };
+    };
   };
 
   // ---------- Recipes ----------

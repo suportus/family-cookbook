@@ -42,6 +42,9 @@ icp deploy -e ic
 mops deployed backend       # save the deployed backend's stable types (upgrade-safety baseline)
 ```
 
+After the very first mainnet deploy, also make the backend a controller of the
+frontend, so the app can show the frontend's cycle balance (see Cycles below).
+
 Commit the changed `deployed/backend.most` together with the code.
 `mops check` compares the code against this file, so an update that would lose
 data fails before it is deployed. Never use `--mode reinstall` on mainnet: it
@@ -53,8 +56,7 @@ file in git.
 ## Users (allow-list)
 
 Only principals on the allow-list can use the app. A new user signs in and
-sees "Dostop zavrnjen" with their principal (also shown at the top of the
-profile menu). Use `-e ic` for mainnet, or `-e local` for the local test
+sees "Dostop zavrnjen" with their principal. Use `-e ic` for mainnet, or `-e local` for the local test
 network.
 
 ```bash
@@ -84,11 +86,19 @@ Make a backup before a bigger backend change.
 
 ## Cycles
 
-The app's profile menu → **Cikli** shows the backend balance (with a warning
-below 1 T), both canister IDs, and how to top up from OISY.
+The app's profile menu → **Cycles** shows the Backend and Frontend balances
+(with a warning below 1 T), both canister IDs, and how to top up from OISY.
 
-The frontend balance can't be shown in the app. Check it (and the backend's)
-from the terminal:
+The frontend balance is read by the backend, which only works when the backend
+is a controller of the frontend. Otherwise the app shows "Ni na voljo". Set it
+once after the first deploy, and again if the frontend canister is ever
+recreated (use the backend's canister ID; `-e local` for the local network):
+
+```bash
+icp canister settings update frontend --add-controller BACKEND_CANISTER_ID -e ic
+```
+
+To check the balances from the terminal:
 
 ```bash
 icp canister status frontend -e ic     # balance of the frontend

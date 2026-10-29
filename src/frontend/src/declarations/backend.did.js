@@ -36,6 +36,7 @@ export const idlFactory = ({ IDL }) => {
     'deleteRecipe' : IDL.Func([IDL.Nat], [], []),
     'getAllRecipes' : IDL.Func([], [IDL.Vec(Recipe)], ['query']),
     'getCycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
+    'getFrontendCycleBalance' : IDL.Func([], [IDL.Opt(IDL.Nat)], []),
     'getRecipe' : IDL.Func([IDL.Nat], [IDL.Opt(Recipe)], ['query']),
     'importRecipes' : IDL.Func([IDL.Vec(ImportItem)], [IDL.Vec(Recipe)], []),
     'listUsers' : IDL.Func([], [IDL.Vec(IDL.Principal)], []),
