@@ -1,0 +1,10 @@
+# HTML and the manifest must revalidate so a deploy is picked up right away
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Fingerprinted build assets never change
+/assets/index-*
+  Cache-Control: public, max-age=31536000, immutable
