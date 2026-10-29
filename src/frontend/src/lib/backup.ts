@@ -4,6 +4,7 @@ import {
   type RecipeBody,
   type RecipeData,
   bodyFromObject,
+  cleanText,
   serializeBody,
 } from "./recipe";
 
@@ -89,7 +90,7 @@ export function parseBackup(text: string): BackupRecipe[] {
     .map((raw) => {
       const r = (raw ?? {}) as Record<string, unknown>;
       return {
-        title: typeof r.title === "string" ? r.title.trim() : "",
+        title: typeof r.title === "string" ? cleanText(r.title) : "",
         body: bodyFromObject(r.body),
         createdAt: isoToNs(r.createdAt),
         updatedAt: isoToNs(r.updatedAt),

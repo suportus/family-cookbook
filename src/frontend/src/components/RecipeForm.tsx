@@ -21,6 +21,7 @@ import {
   type RecipeBody,
   type RecipeData,
   allTags,
+  cleanText,
   fold,
   splitPastedLines,
   usedPrograms,
@@ -203,11 +204,11 @@ export default function RecipeForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
+    if (!cleanText(title)) {
       toast.error("Vnesite naslov recepta");
       return;
     }
-    const draft = { title: title.trim(), body: buildBody() };
+    const draft = { title: cleanText(title), body: buildBody() };
     try {
       const saved =
         recipe && expectedUpdatedAt !== undefined

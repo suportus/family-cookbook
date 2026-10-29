@@ -5,6 +5,7 @@ import {
   MAX_STAGES,
   type RecipeBody,
   cleanBody,
+  cleanText,
   fold,
   splitPastedLines,
 } from "./recipe";
@@ -103,7 +104,7 @@ function parseAirFryer(text: string, warnings: string[]): AirFryer {
 }
 
 function parseOne(block: string): ParsedRecipe | null {
-  const lines = block.split(/\r?\n/).map((l) => l.trim());
+  const lines = block.split(/\r?\n/).map(cleanText);
   const titleIndex = lines.findIndex(Boolean);
   if (titleIndex < 0) return null;
 

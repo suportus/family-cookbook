@@ -109,12 +109,22 @@ export function parseBody(text: string): RecipeBody {
   }
 }
 
+// Invisible characters that often come along with pasted text: zero-width
+// space, word joiner, byte order mark and soft hyphen. (The zero-width joiner
+// stays: emojis such as 👨‍🍳 need it.)
+const INVISIBLE = /[\u200B\u200C\u2060\uFEFF\u00AD]/g;
+
+// Removes invisible characters and trims.
+export function cleanText(text: string): string {
+  return text.replace(INVISIBLE, "").trim();
+}
+
 // Trims text, drops empty rows and empty air fryer stages, and drops the air
 // fryer settings entirely when nothing is filled in.
 export function cleanBody(body: RecipeBody): RecipeBody {
   const tags: string[] = [];
   for (const tag of body.tags) {
-    const t = tag.trim();
+    const t = cleanText(tag);
     if (t && !tags.some((x) => x.toLowerCase() === t.toLowerCase())) {
       tags.push(t);
     }
@@ -123,13 +133,13 @@ export function cleanBody(body: RecipeBody): RecipeBody {
   let airFryer: AirFryer | null = null;
   if (af) {
     const stages = af.stages
-      .map((s) => ({ ...s, note: s.note.trim() }))
+      .map((s) => ({ ...s, note: cleanText(s.note) }))
       .filter((s) => s.tempC !== null || s.minutes !== null || s.note);
     const cleaned = {
-      program: af.program.trim(),
+      program: cleanText(af.program),
       preheat: af.preheat,
       stages,
-      note: af.note.trim(),
+      note: cleanText(af.note),
     };
     if (cleaned.program || cleaned.preheat || stages.length || cleaned.note) {
       airFryer = cleaned;
@@ -138,9 +148,9 @@ export function cleanBody(body: RecipeBody): RecipeBody {
   return {
     tags: tags.sort((a, b) => a.localeCompare(b, "sl")),
     ingredients: body.ingredients
-      .map((r) => ({ kind: r.kind, text: r.text.trim() }))
+      .map((r) => ({ kind: r.kind, text: cleanText(r.text) }))
       .filter((r) => r.text),
-    steps: body.steps.map((s) => s.trim()).filter(Boolean),
+    steps: body.steps.map(cleanText).filter(Boolean),
     airFryer,
   };
 }
@@ -225,6 +235,7 @@ export function shareText(recipe: RecipeData): string {
 // Lower case without accents: "Piščanec" -> "piscanec".
 export function fold(text: string): string {
   return text
+    .replace(INVISIBLE, "")
     .toLowerCase()
     .replace(/đ/g, "d")
     .normalize("NFD")
@@ -282,8 +293,7 @@ export function splitPastedLines(text: string): string[] {
   return text
     .split(/\r?\n/)
     .map((line) =>
-      line
-        .trim()
+      cleanText(line)
         .replace(/^[-•*–]\s*/, "")
         // "1. " or "2) ", but not "0.5 kg"
         .replace(/^\d+[.)]\s+/, "")
