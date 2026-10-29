@@ -1,0 +1,35 @@
+// Version: 1.0.0
+type Data__80296667<K, V> =
+  {var count : Nat__1040412405; kvs : [var ?(K, V)]};
+type Internal__41346355<K, V> =
+  {children : [var ?Node__1000929467<K, V>]; data : Data__80296667<K, V>};
+type Leaf__712614010<K, V> = {data : Data__80296667<K, V>};
+type Nat__1040412405 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__1000929467<K, V> =
+  {#internal : Internal__41346355<K, V>; #leaf : Leaf__712614010<K, V>};
+type Recipe__552182475 =
+  {
+    body : Text;
+    bodyVersion : Nat;
+    createdAt : Int;
+    id : Nat;
+    title : Text;
+    updatedAt : Int
+  };
+actor {
+  stable MAX_BODY_CHARS : Nat;
+  stable MAX_RECIPES : Nat;
+  stable MAX_TITLE_CHARS : Nat;
+  stable allowedUsers :
+    {
+      var root : Node__1000929467<Principal, Bool>;
+      var size : Nat__1040412405
+    };
+  stable var nextId : Nat;
+  stable recipes :
+    {
+      var root : Node__1000929467<Nat, Recipe__552182475>;
+      var size : Nat__1040412405
+    }
+};
