@@ -1,0 +1,24 @@
+networks:
+  # Local test network with its own Internet Identity (local testing only).
+  - name: local
+    mode: managed
+    ii: true
+
+canisters:
+  - name: backend
+    recipe:
+      type: "@dfinity/motoko@v5.1.0"
+    settings:
+      # Freeze while 90 days of running costs are left (default: 30 days), so
+      # there is more time to top up before anything is deleted.
+      freezing_threshold: 7776000
+  - name: frontend
+    recipe:
+      type: "@dfinity/static-site@v0.4.1"
+      configuration:
+        build:
+          - pnpm install --frozen-lockfile
+          - pnpm --dir src/frontend build
+        dir: src/frontend/dist
+    settings:
+      freezing_threshold: 7776000

@@ -1,5 +1,5 @@
 {
-  "name": "@caffeine/template-app",
+  "name": "kuharica",
   "type": "module",
   "engines": {
     "node": ">=16.0.0",
@@ -11,9 +11,10 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "check": "pnpm -r --if-present run check",
     "fix": "pnpm -r --if-present run fix",
-    "bindgen": "caffeine-bindgen --did-file ./src/backend/dist/backend.did --out-dir ./src/frontend/src --actor-interface-file --force"
+    "bindgen": "icp-bindgen --did-file ./src/backend/dist/backend.did --out-dir ./src/frontend/src --actor-interface-file --force"
   },
   "devDependencies": {
+    "@icp-sdk/bindgen": "^0.4.1",
     "sharp": "^0.34.4"
   }
 }
