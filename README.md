@@ -40,6 +40,43 @@ becomes a heading if it starts with `##` or ends with `:`, unless it is
 numbered (`1.`, `2)`) or bulleted (`-`, `•`). The paste box shows a preview
 first; each step row in the form has a "Naslov" toggle to fix a row.
 
+## Authors and roles
+
+Everyone on the allow-list can read every recipe. Each person is an
+**owner** or a **contributor**:
+
+| | Owner | Contributor |
+|---|---|---|
+| Read all recipes | yes | yes |
+| Add recipes | yes | yes (at most 300) |
+| Edit / delete a recipe | any recipe | only their own |
+| Share links (create, revoke, list, revoke all) | every recipe | only their own recipes |
+| Backup | all recipes, with authors | only their own recipes |
+| Recipe size | up to 100,000 characters | up to 20,000 characters |
+| Active share links | (200 in total) | at most 50 |
+
+- The backend sets the author from the signed-in caller when a recipe is
+  created (the app never sends it). Editing keeps the author.
+- The backend enforces these rules; the app only hides buttons that would be
+  refused (Uredi, Izbriši, Deli on others' recipes).
+- Recipes sent to the app carry `authorName`, `isMine` and `canEdit`. Author
+  principals are sent only to owners (for backups). An author without a name
+  is shown as "Član družine", never as a principal.
+- With recipes by two or more authors, the app shows a "Vsi / Moji" toggle
+  next to the search box (list and Air fryer page, remembered on the device),
+  an author filter, and the author's name on others' recipes. With a single
+  author the app looks as it did before.
+- Users, names and roles are managed only by the canister controller from the
+  terminal (see [UPDATING.md](UPDATING.md#users-allow-list)), never in the app.
+
+How it is stored (upgrade-safe, no change to stored recipes): the allow-list
+`allowedUsers` keeps its `Principal → Bool` type, where the Bool now means
+"is owner" (it was `true` for everyone before roles, so they all became
+owners). Names are in `userNames`, authors in `recipeAuthors` (recipe ID →
+principal), both separate from the recipes. The contributor limits are
+`transient` constants in `main.mo`, so a changed value applies after the next
+upgrade (stored `let` constants would keep their old value).
+
 ## Read-only share links
 
 "Deli" on a recipe → "Deli povezavo (samo branje)" creates a link that anyone
@@ -53,9 +90,9 @@ can open without signing in. Links are managed under profile menu →
   deleting the recipe, makes it stop working at once ("Ta povezava ne
   deluje."). At most 200 active links.
 - Visitors see only that recipe: title, tags, ingredients, steps and air
-  fryer settings. No dates, IDs, principals or other recipes.
+  fryer settings. No dates, IDs, authors, principals or other recipes.
 - Backend: `createShare`, `revokeShare`, `listShares`, `revokeAllShares`
-  (allow-list only) and `getSharedRecipe(token)`, the only function anonymous
+  (allow-list only; the recipe's author or an owner, see Authors and roles) and `getSharedRecipe(token)`, the only function anonymous
   callers may use. It returns the recipe's JSON body as stored, so **if a
   private field is ever added to the body, filter it out in
   `getSharedRecipe`**.

@@ -2,7 +2,7 @@ import { HttpAgent } from "@icp-sdk/core/agent";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type ImportItem,
-  type Recipe,
+  type RecipeView,
   type ShareInfo,
   createActor,
 } from "../backend";
@@ -35,6 +35,23 @@ export function useRecipes() {
     // Only signed in: anonymous calls are always refused.
     enabled: !!identity && !!actor && !isFetching,
     // An "Access denied" error won't go away by retrying.
+    retry: false,
+  });
+}
+
+// The signed-in user's role: owners may change every recipe and back up all
+// recipes with their authors.
+export function useMe() {
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
+
+  return useQuery<{ isOwner: boolean }>({
+    queryKey: ["me"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not initialized");
+      return actor.getMe();
+    },
+    enabled: !!identity && !!actor && !isFetching,
     retry: false,
   });
 }
@@ -240,7 +257,7 @@ export function useImportRecipes() {
       let added = 0;
       try {
         for (const batch of batches(items)) {
-          const saved: Recipe[] = await actor.importRecipes(batch);
+          const saved: RecipeView[] = await actor.importRecipes(batch);
           added += saved.length;
           updateCache((list) => [...list, ...saved.map(toRecipeData)]);
         }

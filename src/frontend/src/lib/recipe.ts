@@ -1,4 +1,5 @@
-import type { Recipe } from "../backend";
+import type { Principal } from "@icp-sdk/core/principal";
+import type { RecipeView } from "../backend";
 
 // The backend stores everything except the title as a JSON text (`body`).
 // `bodyVersion` says which format the body uses. New fields can be added to
@@ -33,11 +34,17 @@ export type RecipeBody = {
   airFryer: AirFryer | null;
 };
 
+// `authorName`, `isMine` and `canEdit` come from the backend, which also
+// enforces who may change a recipe. `author` is only sent to owners.
 export type RecipeData = RecipeBody & {
   id: bigint;
   title: string;
   createdAt: bigint;
   updatedAt: bigint;
+  authorName: string;
+  isMine: boolean;
+  canEdit: boolean;
+  author?: Principal;
 };
 
 export const MAX_STAGES = 3;
@@ -174,14 +181,48 @@ export function serializeBody(body: RecipeBody): string {
   return JSON.stringify(cleanBody(body));
 }
 
-export function toRecipeData(recipe: Recipe): RecipeData {
+export function toRecipeData(recipe: RecipeView): RecipeData {
   return {
     ...parseBody(recipe.body),
     id: recipe.id,
     title: recipe.title,
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
+    authorName: recipe.authorName,
+    isMine: recipe.isMine,
+    canEdit: recipe.canEdit,
+    author: recipe.author,
   };
+}
+
+// ---------- Authors ----------
+
+// Identifies an author for filtering: my own recipes, or another author's
+// name (other principals are only sent to owners).
+const MY_KEY = "\u0000me";
+
+export function authorKey(recipe: RecipeData): string {
+  return recipe.isMine ? MY_KEY : recipe.authorName;
+}
+
+// The authors of the recipes, mine first, then by name. Author names, the
+// "Vsi / Moji" toggle and the author filter are only shown with two or more.
+export function authorsOf(
+  recipes: RecipeData[],
+): { key: string; label: string }[] {
+  const seen = new Map<string, string>();
+  for (const r of recipes) {
+    if (!seen.has(authorKey(r))) {
+      seen.set(authorKey(r), r.isMine ? `${r.authorName} (jaz)` : r.authorName);
+    }
+  }
+  return [...seen.entries()]
+    .map(([key, label]) => ({ key, label }))
+    .sort(
+      (a, b) =>
+        Number(b.key === MY_KEY) - Number(a.key === MY_KEY) ||
+        compareTitles(a.label, b.label),
+    );
 }
 
 // ---------- Display ----------

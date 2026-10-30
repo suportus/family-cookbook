@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Search, Wind } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { navigate } from "../hooks/useRoute";
 import {
   type RecipeData,
@@ -16,7 +16,14 @@ function joinValues(values: (number | null)[], unit: string): string {
 }
 
 // All air fryer settings in one table: food, program, temperature, time, note.
-export default function AirFryerPage({ recipes }: { recipes: RecipeData[] }) {
+// `scopeToggle` ("Vsi / Moji") is only given when there are two or more authors.
+export default function AirFryerPage({
+  recipes,
+  scopeToggle,
+}: {
+  recipes: RecipeData[];
+  scopeToggle: ReactNode;
+}) {
   const [query, setQuery] = useState("");
 
   const rows = useMemo(
@@ -36,15 +43,18 @@ export default function AirFryerPage({ recipes }: { recipes: RecipeData[] }) {
         <Wind className="h-7 w-7 text-primary" />
         Air fryer
       </h2>
-      <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Išči jed ali program ..."
-          className="h-12 rounded-full pl-10 text-base"
-        />
+      <div className="mb-4 flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Išči jed ali program ..."
+            className="h-12 rounded-full pl-10 text-base"
+          />
+        </div>
+        {scopeToggle}
       </div>
 
       {rows.length === 0 ? (

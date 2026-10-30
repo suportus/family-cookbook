@@ -50,32 +50,69 @@ Commit the changed `deployed/backend.most` together with the code.
 data fails before it is deployed. Never use `--mode reinstall` on mainnet: it
 deletes all data.
 
+`icp deploy` also compares the backend's interface with the deployed one. If
+it reports a "BREAKING change", read which method it names: if only the
+terminal uses that method (like `listUsers` when roles were added), repeat
+with `--yes`; if the app uses it, fix the code instead.
+
 Mainnet canister IDs are stored in `.icp/data/mappings/ic.ids.json`. Keep this
 file in git.
 
 ## Users (allow-list)
 
-Only principals on the allow-list can use the app. A new user signs in and
-sees "Dostop zavrnjen" with their principal. Use `-e ic` for mainnet, or `-e local` for the local test
-network.
+Only principals on the allow-list can use the app. Each one is an owner or a
+contributor (see "Authors and roles" in the README). Use `-e ic` for mainnet,
+or `-e local` for the local test network. These calls only work for a
+controller of the backend canister (`clockup-admin`); they can't be done from
+the app.
+
+### What a new person sees
+
+1. They open https://vniz5-yaaaa-aaaae-ahdxq-cai.icp.net/ (exactly this
+   address) and sign in with Internet Identity.
+2. They see **"Dostop zavrnjen"** with their principal and a copy button, and
+   send you the principal.
+3. After you add them (below) they reload the page and see all recipes. They
+   can add their own, and edit, delete and share only those.
+
+### Commands
 
 ```bash
-# Add a user
+# Add a person (as a contributor). Adding someone already on the list keeps their role.
 icp canister call backend addUser '(principal "PRINCIPAL")' -e ic
 
-# Remove a user
-icp canister call backend removeUser '(principal "PRINCIPAL")' -e ic
+# Set the name shown on their recipes (an empty name "" removes it)
+icp canister call backend setUserName '(principal "PRINCIPAL", "Teta Mojca")' -e ic
 
-# List users
+# Make someone an owner (true) or a contributor again (false)
+icp canister call backend setOwner '(principal "PRINCIPAL", true)' -e ic
+
+# List users with names and roles
 icp canister call backend listUsers '()' -e ic
+
+# Remove a person (their recipes stay; owners can still edit them)
+icp canister call backend removeUser '(principal "PRINCIPAL")' -e ic
 ```
 
-These calls only work for a controller of the backend canister.
+`setUserName` and `setOwner` need the person to be on the list already
+(`addUser` first).
+
+### Recipes without an author
+
+Recipes from before authors existed (version with share links) have no
+author until a controller assigns them; until then only owners can change
+them. Check and assign (running it again changes nothing):
+
+```bash
+icp canister call backend countUnassignedRecipes '()' -e ic
+icp canister call backend assignUnassignedRecipes '(principal "OWNER_PRINCIPAL")' -e ic
+```
 
 ## Share links
 
 Read-only links are managed in the app (recipe → "Deli", profile menu →
-"Skupne povezave"). From the terminal (any allow-listed identity):
+"Skupne povezave"). Owners manage every link, contributors only the links of
+their own recipes. From the terminal (any allow-listed identity):
 
 ```bash
 icp canister call backend listShares '()' -e ic         # active links
@@ -96,13 +133,18 @@ icp canister call backend getSharedRecipe '("TOKEN")' --identity anonymous -e ic
 
 Profile menu → **Varnostna kopija**:
 
-- **Prenesi varnostno kopijo** downloads every recipe as one JSON file
-  (`kuharica-YYYY-MM-DD.json`).
+- **Prenesi varnostno kopijo** downloads the recipes as one JSON file
+  (`kuharica-YYYY-MM-DD.json`). An owner's file has every recipe with its
+  author (`author` principal and `authorName`); a contributor's file has only
+  their own recipes, without authors.
 - The file format is 2 since step headings (steps are `{kind, text}` rows).
   Older files (format 1) still import; their steps become normal steps.
 - **Izberi datoteko** imports such a file. Import only adds recipes (with new
   IDs); it never deletes or overwrites. For a title that already exists you
   choose "Preskoči" or "Dodaj kot kopijo".
+- Authors on import: an owner restoring an owner's file keeps the authors. A
+  contributor's import, and any file without authors (older backups), makes
+  the importer the author.
 
 Make a backup before a bigger backend change.
 

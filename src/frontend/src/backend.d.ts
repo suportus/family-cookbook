@@ -22,20 +22,25 @@ export interface ImportItem {
     body: string;
     createdAt?: bigint;
     bodyVersion: bigint;
+    author?: Principal;
     updatedAt?: bigint;
-}
-export interface Recipe {
-    id: bigint;
-    title: string;
-    body: string;
-    createdAt: bigint;
-    bodyVersion: bigint;
-    updatedAt: bigint;
 }
 export interface RecipeInput {
     title: string;
     body: string;
     bodyVersion: bigint;
+}
+export interface RecipeView {
+    id: bigint;
+    title: string;
+    body: string;
+    createdAt: bigint;
+    authorName: string;
+    canEdit: boolean;
+    isMine: boolean;
+    bodyVersion: bigint;
+    author?: Principal;
+    updatedAt: bigint;
 }
 export interface ShareInfo {
     title: string;
@@ -48,23 +53,40 @@ export interface SharedRecipe {
     body: string;
     bodyVersion: bigint;
 }
+export interface UserInfo {
+    name?: string;
+    role: Role;
+    user: Principal;
+}
+export enum Role {
+    owner = "owner",
+    contributor = "contributor"
+}
 export interface backendInterface {
-    addRecipe(input: RecipeInput): Promise<Recipe>;
+    addRecipe(input: RecipeInput): Promise<RecipeView>;
     addUser(user: Principal): Promise<void>;
+    assignUnassignedRecipes(author: Principal): Promise<bigint>;
+    countUnassignedRecipes(): Promise<bigint>;
     createShare(recipeId: bigint): Promise<string>;
     deleteRecipe(id: bigint): Promise<void>;
-    getAllRecipes(): Promise<Array<Recipe>>;
+    getAllRecipes(): Promise<Array<RecipeView>>;
     getCycleBalance(): Promise<bigint>;
     getFrontendCycleBalance(): Promise<bigint | null>;
-    getRecipe(id: bigint): Promise<Recipe | null>;
+    getMe(): Promise<{
+        name?: string;
+        isOwner: boolean;
+    }>;
+    getRecipe(id: bigint): Promise<RecipeView | null>;
     getSharedRecipe(token: string): Promise<SharedRecipe | null>;
-    importRecipes(items: Array<ImportItem>): Promise<Array<Recipe>>;
+    importRecipes(items: Array<ImportItem>): Promise<Array<RecipeView>>;
     listShares(): Promise<Array<ShareInfo>>;
-    listUsers(): Promise<Array<Principal>>;
+    listUsers(): Promise<Array<UserInfo>>;
     removeUser(user: Principal): Promise<void>;
     revokeAllShares(): Promise<void>;
     revokeShare(recipeId: bigint): Promise<void>;
-    updateRecipe(id: bigint, input: RecipeInput, expectedUpdatedAt: bigint): Promise<Recipe>;
+    setOwner(user: Principal, owner: boolean): Promise<void>;
+    setUserName(user: Principal, name: string): Promise<void>;
+    updateRecipe(id: bigint, input: RecipeInput, expectedUpdatedAt: bigint): Promise<RecipeView>;
 }
 export interface CreateActorOptions {
     agent?: Agent;

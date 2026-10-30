@@ -33,9 +33,17 @@ const BACKEND_MESSAGES = [
   "Recept je bil medtem spremenjen. Osvežite in poskusite znova.",
   "Doseženo je največje število povezav.",
   "Povezave ni bilo mogoče ustvariti. Poskusite znova.",
+  "Doseženo je največje število vaših receptov.",
+  "Doseženo je največje število vaših povezav.",
 ];
+
+// The backend refuses changes to someone else's recipe with this message.
+const NOT_YOURS = "Tega recepta ne morete spreminjati.";
 
 export function backendErrorMessage(error: unknown, fallback: string): string {
   const text = String(error);
+  if (text.includes(NOT_YOURS)) {
+    return "Tega recepta ne morete spreminjati, ker ni vaš.";
+  }
   return BACKEND_MESSAGES.find((m) => text.includes(m)) ?? fallback;
 }

@@ -31,6 +31,8 @@ actor {
       var size : Nat__1040412405
     };
   stable var nextId : Nat;
+  stable recipeAuthors :
+    {var root : Node__1000929467<Nat, Principal>; var size : Nat__1040412405};
   stable recipeShares :
     {var root : Node__1000929467<Nat, Text>; var size : Nat__1040412405};
   stable recipes :
@@ -41,6 +43,11 @@ actor {
   stable shares :
     {
       var root : Node__1000929467<Text, Share__587096241>;
+      var size : Nat__1040412405
+    };
+  stable userNames :
+    {
+      var root : Node__1000929467<Principal, Text>;
       var size : Nat__1040412405
     }
 };

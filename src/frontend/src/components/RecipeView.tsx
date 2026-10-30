@@ -31,7 +31,16 @@ import { type RecipeData, formatDate, shareText } from "../lib/recipe";
 import { shareLink, shareUrl } from "../lib/share";
 import RecipeDetails from "./RecipeDetails";
 
-export default function RecipeView({ recipe }: { recipe: RecipeData }) {
+// Edit, delete and the share menu are shown only when the backend says the
+// user may change the recipe (author or owner); the backend enforces it too.
+// `showAuthor`: there are two or more authors, so others' names are shown.
+export default function RecipeView({
+  recipe,
+  showAuthor,
+}: {
+  recipe: RecipeData;
+  showAuthor: boolean;
+}) {
   const deleteRecipe = useDeleteRecipe();
   const shares = useShares();
   const createShare = useCreateShare();
@@ -80,7 +89,7 @@ export default function RecipeView({ recipe }: { recipe: RecipeData }) {
     }
   };
 
-  const actions = (
+  const actions = recipe.canEdit && (
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -169,6 +178,7 @@ export default function RecipeView({ recipe }: { recipe: RecipeData }) {
       actions={actions}
       footer={
         <p className="border-t pt-4 text-sm text-muted-foreground">
+          {showAuthor && !recipe.isMine && <>Avtor: {recipe.authorName} · </>}
           Dodano {formatDate(recipe.createdAt)}
           {recipe.updatedAt !== recipe.createdAt && (
             <> · Spremenjeno {formatDate(recipe.updatedAt)}</>
