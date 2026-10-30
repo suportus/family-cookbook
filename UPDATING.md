@@ -72,12 +72,34 @@ icp canister call backend listUsers '()' -e ic
 
 These calls only work for a controller of the backend canister.
 
+## Share links
+
+Read-only links are managed in the app (recipe → "Deli", profile menu →
+"Skupne povezave"). From the terminal (any allow-listed identity):
+
+```bash
+icp canister call backend listShares '()' -e ic         # active links
+icp canister call backend revokeShare '(5)' -e ic       # stop the link of recipe 5
+icp canister call backend revokeAllShares '()' -e ic    # stop every link
+```
+
+A link opens as `https://vniz5-yaaaa-aaaae-ahdxq-cai.icp.net/#/s/TOKEN`.
+Check what a visitor sees, without signing in:
+
+```bash
+icp canister call backend getSharedRecipe '("TOKEN")' --identity anonymous -e ic
+```
+
+`(null)` means the link doesn't work (unknown, revoked or recipe deleted).
+
 ## Backups
 
 Profile menu → **Varnostna kopija**:
 
 - **Prenesi varnostno kopijo** downloads every recipe as one JSON file
   (`kuharica-YYYY-MM-DD.json`).
+- The file format is 2 since step headings (steps are `{kind, text}` rows).
+  Older files (format 1) still import; their steps become normal steps.
 - **Izberi datoteko** imports such a file. Import only adds recipes (with new
   IDs); it never deletes or overwrites. For a title that already exists you
   choose "Preskoči" or "Dodaj kot kopijo".

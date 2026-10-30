@@ -4,9 +4,14 @@ import type { Recipe } from "../backend";
 // `bodyVersion` says which format the body uses. New fields can be added to
 // the body later without a backend data migration: older bodies simply don't
 // have them, and `parseBody` fills in defaults.
-export const BODY_VERSION = 1n;
+//
+// Version 2: steps are rows ({kind, text}) that may be headings. Version 1
+// stored steps as plain texts; `bodyFromObject` still reads those as steps.
+export const BODY_VERSION = 2n;
 
 export type IngredientRow = { kind: "item" | "section"; text: string };
+
+export type StepRow = { kind: "step" | "section"; text: string };
 
 export type AirFryerStage = {
   tempC: number | null;
@@ -24,7 +29,7 @@ export type AirFryer = {
 export type RecipeBody = {
   tags: string[];
   ingredients: IngredientRow[];
-  steps: string[];
+  steps: StepRow[];
   airFryer: AirFryer | null;
 };
 
@@ -80,7 +85,15 @@ export function bodyFromObject(raw: unknown): RecipeBody {
         text: asString(r.text),
       };
     }),
-    steps: asArray(obj.steps).map(asString),
+    steps: asArray(obj.steps).map((row): StepRow => {
+      // Version 1: a plain text is a normal step.
+      if (typeof row === "string") return { kind: "step", text: row };
+      const r = asObject(row);
+      return {
+        kind: r.kind === "section" ? "section" : "step",
+        text: asString(r.text),
+      };
+    }),
     airFryer: af
       ? {
           program: asString(af.program),
@@ -150,7 +163,9 @@ export function cleanBody(body: RecipeBody): RecipeBody {
     ingredients: body.ingredients
       .map((r) => ({ kind: r.kind, text: cleanText(r.text) }))
       .filter((r) => r.text),
-    steps: body.steps.map(cleanText).filter(Boolean),
+    steps: body.steps
+      .map((r) => ({ kind: r.kind, text: cleanText(r.text) }))
+      .filter((r) => r.text),
     airFryer,
   };
 }
@@ -202,6 +217,20 @@ export function formatDate(ns: bigint): string {
   });
 }
 
+// Number of each step row; numbering starts again at 1 after each heading.
+// Heading rows get 0.
+export function stepNumbers(steps: StepRow[]): number[] {
+  let n = 0;
+  return steps.map((row) => {
+    if (row.kind === "section") {
+      n = 0;
+      return 0;
+    }
+    n += 1;
+    return n;
+  });
+}
+
 // Plain text for WhatsApp/Viber (*bold* works in both).
 export function shareText(recipe: RecipeData): string {
   const lines: string[] = [`*${recipe.title}*`];
@@ -225,7 +254,12 @@ export function shareText(recipe: RecipeData): string {
   }
   if (recipe.steps.length) {
     lines.push("", "*Navodila*");
-    recipe.steps.forEach((step, i) => lines.push(`${i + 1}. ${step}`));
+    const numbers = stepNumbers(recipe.steps);
+    recipe.steps.forEach((row, i) => {
+      lines.push(
+        row.kind === "section" ? `_${row.text}_` : `${numbers[i]}. ${row.text}`,
+      );
+    });
   }
   return lines.join("\n");
 }
@@ -288,16 +322,49 @@ export function usedPrograms(recipes: RecipeData[]): string[] {
   return [...set.values()].sort(compareTitles);
 }
 
+const BULLET = /^[-•*–]\s*/;
+// "1. " or "2) ", but not "0.5 kg"
+const NUMBER = /^\d+[.)]\s+/;
+
+function stripMarker(line: string): string {
+  return line.replace(BULLET, "").replace(NUMBER, "").trim();
+}
+
 // Splits pasted text into rows: one per line, without bullets or numbering.
 export function splitPastedLines(text: string): string[] {
   return text
     .split(/\r?\n/)
-    .map((line) =>
-      cleanText(line)
-        .replace(/^[-•*–]\s*/, "")
-        // "1. " or "2) ", but not "0.5 kg"
-        .replace(/^\d+[.)]\s+/, "")
-        .trim(),
-    )
+    .map((line) => stripMarker(cleanText(line)))
     .filter(Boolean);
+}
+
+// One pasted line of steps. It is a heading if it starts with "##" or ends
+// with ":", unless it is numbered ("1.", "2)") or bulleted ("-", "•").
+//   "## Testo"            -> heading "Testo"
+//   "Za omako:"           -> heading "Za omako"
+//   "1. Zmešaj naslednje:" -> step
+export function stepFromLine(raw: string): StepRow | null {
+  const line = cleanText(raw);
+  if (line.startsWith("##")) {
+    const text = line
+      .replace(/^#+\s*/, "")
+      .replace(/:$/, "")
+      .trim();
+    return text ? { kind: "section", text } : null;
+  }
+  const marked = BULLET.test(line) || NUMBER.test(line);
+  const text = stripMarker(line);
+  if (!text) return null;
+  if (!marked && text.endsWith(":")) {
+    const heading = text.slice(0, -1).trim();
+    if (heading) return { kind: "section", text: heading };
+  }
+  return { kind: "step", text };
+}
+
+export function splitPastedSteps(text: string): StepRow[] {
+  return text
+    .split(/\r?\n/)
+    .map(stepFromLine)
+    .filter((r): r is StepRow => r !== null);
 }

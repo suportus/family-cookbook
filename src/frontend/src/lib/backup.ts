@@ -20,9 +20,13 @@ import {
 //       "body": { "tags": [], "ingredients": [], "steps": [], "airFryer": null } }
 //   ]
 // }
+//
+// Format 2: steps are rows ({ "kind": "step" | "section", "text": "..." }).
+// Format 1 files (steps as plain texts) still import; an older app refuses a
+// format 2 file instead of losing its steps.
 
 const APP = "kuharica";
-const FORMAT = 1;
+const FORMAT = 2;
 
 export type BackupRecipe = {
   title: string;

@@ -37,17 +37,33 @@ export interface RecipeInput {
     body: string;
     bodyVersion: bigint;
 }
+export interface ShareInfo {
+    title: string;
+    token: string;
+    recipeId: bigint;
+    createdAt: bigint;
+}
+export interface SharedRecipe {
+    title: string;
+    body: string;
+    bodyVersion: bigint;
+}
 export interface backendInterface {
     addRecipe(input: RecipeInput): Promise<Recipe>;
     addUser(user: Principal): Promise<void>;
+    createShare(recipeId: bigint): Promise<string>;
     deleteRecipe(id: bigint): Promise<void>;
     getAllRecipes(): Promise<Array<Recipe>>;
     getCycleBalance(): Promise<bigint>;
     getFrontendCycleBalance(): Promise<bigint | null>;
     getRecipe(id: bigint): Promise<Recipe | null>;
+    getSharedRecipe(token: string): Promise<SharedRecipe | null>;
     importRecipes(items: Array<ImportItem>): Promise<Array<Recipe>>;
+    listShares(): Promise<Array<ShareInfo>>;
     listUsers(): Promise<Array<Principal>>;
     removeUser(user: Principal): Promise<void>;
+    revokeAllShares(): Promise<void>;
+    revokeShare(recipeId: bigint): Promise<void>;
     updateRecipe(id: bigint, input: RecipeInput, expectedUpdatedAt: bigint): Promise<Recipe>;
 }
 export interface CreateActorOptions {

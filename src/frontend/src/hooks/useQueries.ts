@@ -1,9 +1,17 @@
+import { HttpAgent } from "@icp-sdk/core/agent";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ImportItem, Recipe } from "../backend";
+import {
+  type ImportItem,
+  type Recipe,
+  type ShareInfo,
+  createActor,
+} from "../backend";
+import { getCanisterEnv } from "../lib/canisterEnv";
 import {
   BODY_VERSION,
   type RecipeBody,
   type RecipeData,
+  parseBody,
   serializeBody,
   toRecipeData,
 } from "../lib/recipe";
@@ -11,6 +19,7 @@ import { useActor } from "./useActor";
 import { useInternetIdentity } from "./useInternetIdentity";
 
 const RECIPES_KEY = ["recipes"];
+const SHARES_KEY = ["shares"];
 
 export function useRecipes() {
   const { actor, isFetching } = useActor();
@@ -94,6 +103,7 @@ export function useUpdateRecipe() {
 export function useDeleteRecipe() {
   const { actor } = useActor();
   const updateCache = useUpdateCache();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: bigint) => {
@@ -101,7 +111,95 @@ export function useDeleteRecipe() {
       await actor.deleteRecipe(id);
       return id;
     },
-    onSuccess: (id) => updateCache((list) => list.filter((r) => r.id !== id)),
+    onSuccess: (id) => {
+      updateCache((list) => list.filter((r) => r.id !== id));
+      // The backend also removed the recipe's share link.
+      queryClient.setQueryData<ShareInfo[]>(SHARES_KEY, (old) =>
+        old?.filter((s) => s.recipeId !== id),
+      );
+    },
+  });
+}
+
+// ---------- Share links ----------
+
+export function useShares() {
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
+
+  return useQuery<ShareInfo[]>({
+    queryKey: SHARES_KEY,
+    queryFn: async () => {
+      if (!actor) throw new Error("Actor not initialized");
+      const shares = await actor.listShares();
+      return shares.sort((a, b) => Number(b.createdAt - a.createdAt));
+    },
+    enabled: !!identity && !!actor && !isFetching,
+  });
+}
+
+// Returns the recipe's link token (the existing one if it already has one).
+export function useCreateShare() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (recipeId: bigint): Promise<string> => {
+      if (!actor) throw new Error("Actor not initialized");
+      return actor.createShare(recipeId);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: SHARES_KEY }),
+  });
+}
+
+export function useRevokeShare() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (recipeId: bigint) => {
+      if (!actor) throw new Error("Actor not initialized");
+      await actor.revokeShare(recipeId);
+      return recipeId;
+    },
+    onSuccess: (recipeId) =>
+      queryClient.setQueryData<ShareInfo[]>(SHARES_KEY, (old) =>
+        old?.filter((s) => s.recipeId !== recipeId),
+      ),
+  });
+}
+
+export function useRevokeAllShares() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Actor not initialized");
+      await actor.revokeAllShares();
+    },
+    onSuccess: () => queryClient.setQueryData<ShareInfo[]>(SHARES_KEY, []),
+  });
+}
+
+export type SharedRecipeData = RecipeBody & { title: string };
+
+// The recipe behind a share link, read with an anonymous actor (no sign-in).
+// null: the link doesn't exist (unknown, revoked or recipe deleted).
+export function useSharedRecipe(token: string) {
+  return useQuery<SharedRecipeData | null>({
+    queryKey: ["shared", token],
+    queryFn: async () => {
+      if (!token) return null;
+      const { backendId, rootKey } = getCanisterEnv();
+      if (!backendId) throw new Error("Backend canister ID not found");
+      const agent = await HttpAgent.create({ rootKey });
+      const shared = await createActor(backendId, { agent }).getSharedRecipe(
+        token,
+      );
+      return shared ? { ...parseBody(shared.body), title: shared.title } : null;
+    },
+    retry: 1,
   });
 }
 

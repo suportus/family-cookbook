@@ -30,6 +30,8 @@ Sestavine:
 Navodila:
 1. Bedra osuši s papirnato brisačo.
 2. Natri z marinado.
+## Peka
+1. Peci v air fryerju, na polovici obrni.
 ---
 Krompirček
 Oznake: Air fryer, Prigrizki
@@ -106,7 +108,9 @@ export default function ImportTextDialog({
                   </li>
                   <li>
                     <code>Navodila:</code> en korak na vrstico; številke niso
-                    potrebne.
+                    potrebne. Vrstica z <code>##</code> na začetku ali z{" "}
+                    <code>:</code> na koncu je naslov (razen če je oštevilčena
+                    ali z alinejo).
                   </li>
                 </ul>
                 <pre className="overflow-x-auto whitespace-pre rounded-lg bg-muted p-3 text-xs text-foreground">

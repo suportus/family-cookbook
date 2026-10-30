@@ -13,7 +13,7 @@
 - **lint fix**: `pnpm fix`
 - **build**: `pnpm build`
 
-**Backend** (run from `src/backend/`):
+**Backend** (run from the project root: `mops.toml` and the `system-idl` path are relative to it):
 
 - **install**: `mops install`
 - **typecheck**: `mops check --fix`
@@ -25,7 +25,8 @@
 
 ## Learnings
 
-[No learnings yet]
+- `mops check --fix` also checks upgrade safety against `deployed/backend.most` (the mainnet baseline).
+- The project gives stable fields inline initializers (no `migrations/` chain); adding a new `let` field is an upgrade-safe change here.
 
 <!-- ic-skills:managed:start -->
 <!-- state: configured (on-demand) -->

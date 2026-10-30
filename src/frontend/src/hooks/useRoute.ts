@@ -7,12 +7,15 @@ export type Route =
   | { name: "recipe"; id: bigint }
   | { name: "edit"; id: bigint }
   | { name: "new" }
-  | { name: "airFryer" };
+  | { name: "airFryer" }
+  // Read-only share link (#/s/<token>), opened without signing in.
+  | { name: "shared"; token: string };
 
 function parse(hash: string): Route {
   const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   if (parts[0] === "nov") return { name: "new" };
   if (parts[0] === "airfryer") return { name: "airFryer" };
+  if (parts[0] === "s") return { name: "shared", token: parts[1] ?? "" };
   if (parts[0] === "recept" && /^\d+$/.test(parts[1] ?? "")) {
     const id = BigInt(parts[1]);
     return parts[2] === "uredi" ? { name: "edit", id } : { name: "recipe", id };
@@ -32,6 +35,8 @@ export function routeHash(route: Route): string {
       return `#/recept/${route.id}`;
     case "edit":
       return `#/recept/${route.id}/uredi`;
+    case "shared":
+      return `#/s/${route.token}`;
   }
 }
 

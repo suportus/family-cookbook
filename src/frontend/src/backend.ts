@@ -71,20 +71,36 @@ export interface RecipeInput {
     body: string;
     bodyVersion: bigint;
 }
+export interface ShareInfo {
+    title: string;
+    token: string;
+    recipeId: bigint;
+    createdAt: bigint;
+}
+export interface SharedRecipe {
+    title: string;
+    body: string;
+    bodyVersion: bigint;
+}
 export interface backendInterface {
     addRecipe(input: RecipeInput): Promise<Recipe>;
     addUser(user: Principal): Promise<void>;
+    createShare(recipeId: bigint): Promise<string>;
     deleteRecipe(id: bigint): Promise<void>;
     getAllRecipes(): Promise<Array<Recipe>>;
     getCycleBalance(): Promise<bigint>;
     getFrontendCycleBalance(): Promise<bigint | null>;
     getRecipe(id: bigint): Promise<Recipe | null>;
+    getSharedRecipe(token: string): Promise<SharedRecipe | null>;
     importRecipes(items: Array<ImportItem>): Promise<Array<Recipe>>;
+    listShares(): Promise<Array<ShareInfo>>;
     listUsers(): Promise<Array<Principal>>;
     removeUser(user: Principal): Promise<void>;
+    revokeAllShares(): Promise<void>;
+    revokeShare(recipeId: bigint): Promise<void>;
     updateRecipe(id: bigint, input: RecipeInput, expectedUpdatedAt: bigint): Promise<Recipe>;
 }
-import type { ImportItem as _ImportItem, Recipe as _Recipe } from "./declarations/backend.did";
+import type { ImportItem as _ImportItem, Recipe as _Recipe, SharedRecipe as _SharedRecipe } from "./declarations/backend.did";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>){}
     async addRecipe(arg0: RecipeInput): Promise<Recipe> {
@@ -93,6 +109,10 @@ export class Backend implements backendInterface {
     }
     async addUser(arg0: Principal): Promise<void> {
         const result = await this.actor.addUser(arg0);
+        return result;
+    }
+    async createShare(arg0: bigint): Promise<string> {
+        const result = await this.actor.createShare(arg0);
         return result;
     }
     async deleteRecipe(arg0: bigint): Promise<void> {
@@ -115,8 +135,16 @@ export class Backend implements backendInterface {
         const result = await this.actor.getRecipe(arg0);
         return from_candid_opt_n2(result);
     }
+    async getSharedRecipe(arg0: string): Promise<SharedRecipe | null> {
+        const result = await this.actor.getSharedRecipe(arg0);
+        return from_candid_opt_n3(result);
+    }
     async importRecipes(arg0: Array<ImportItem>): Promise<Array<Recipe>> {
-        const result = await this.actor.importRecipes(to_candid_vec_n3(arg0));
+        const result = await this.actor.importRecipes(to_candid_vec_n4(arg0));
+        return result;
+    }
+    async listShares(): Promise<Array<ShareInfo>> {
+        const result = await this.actor.listShares();
         return result;
     }
     async listUsers(): Promise<Array<Principal>> {
@@ -125,6 +153,14 @@ export class Backend implements backendInterface {
     }
     async removeUser(arg0: Principal): Promise<void> {
         const result = await this.actor.removeUser(arg0);
+        return result;
+    }
+    async revokeAllShares(): Promise<void> {
+        const result = await this.actor.revokeAllShares();
+        return result;
+    }
+    async revokeShare(arg0: bigint): Promise<void> {
+        const result = await this.actor.revokeShare(arg0);
         return result;
     }
     async updateRecipe(arg0: bigint, arg1: RecipeInput, arg2: bigint): Promise<Recipe> {
@@ -138,10 +174,13 @@ function from_candid_opt_n1(value: [] | [bigint]): bigint | null {
 function from_candid_opt_n2(value: [] | [_Recipe]): Recipe | null {
     return value.length === 0 ? null : value[0];
 }
-function to_candid_ImportItem_n4(value: ImportItem): _ImportItem {
-    return to_candid_record_n5(value);
+function from_candid_opt_n3(value: [] | [_SharedRecipe]): SharedRecipe | null {
+    return value.length === 0 ? null : value[0];
 }
-function to_candid_record_n5(value: {
+function to_candid_ImportItem_n5(value: ImportItem): _ImportItem {
+    return to_candid_record_n6(value);
+}
+function to_candid_record_n6(value: {
     title: string;
     body: string;
     createdAt?: bigint;
@@ -162,8 +201,8 @@ function to_candid_record_n5(value: {
         updatedAt: value.updatedAt ? candid_some(value.updatedAt) : candid_none()
     };
 }
-function to_candid_vec_n3(value: Array<ImportItem>): Array<_ImportItem> {
-    return value.map((x)=>to_candid_ImportItem_n4(x));
+function to_candid_vec_n4(value: Array<ImportItem>): Array<_ImportItem> {
+    return value.map((x)=>to_candid_ImportItem_n5(x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

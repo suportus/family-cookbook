@@ -7,6 +7,7 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Cycles "mo:core/Cycles";
+import Random "mo:core/Random";
 import IC "ic:aaaaa-aa";
 
 actor Kuharica {
@@ -179,6 +180,7 @@ actor Kuharica {
       Runtime.trap("Recept ne obstaja.");
     };
     recipes.remove(id);
+    removeShare(id);
   };
 
   public shared query ({ caller }) func getRecipe(id : Nat) : async ?Recipe {
@@ -208,5 +210,154 @@ actor Kuharica {
         insert(item.title, item.body, item.bodyVersion, createdAt, updatedAt);
       }
     );
+  };
+
+  // ---------- Read-only share links ----------
+
+  // A share link gives anyone who has its token read-only access to one
+  // target. Only #recipe exists now; other targets (a tag, a collection) can
+  // be added as new variant cases later without a data migration.
+  public type ShareTarget = { #recipe : Nat };
+
+  public type Share = {
+    target : ShareTarget;
+    createdAt : Int;
+  };
+
+  public type ShareInfo = {
+    token : Text;
+    recipeId : Nat;
+    title : Text;
+    createdAt : Int;
+  };
+
+  // What a visitor of a share link gets: no IDs, dates or principals. `body`
+  // is the same JSON the app stores (tags, ingredients, steps, air fryer).
+  // If a private field is ever added to the body, filter it out here.
+  public type SharedRecipe = {
+    title : Text;
+    body : Text;
+    bodyVersion : Nat;
+  };
+
+  let MAX_SHARES = 200;
+  // 16 random bytes = 128 bits, written as 32 hex characters.
+  let TOKEN_BYTES = 16;
+
+  // Token -> share, and recipe ID -> its token (at most one link per recipe).
+  let shares = Map.empty<Text, Share>();
+  let recipeShares = Map.empty<Nat, Text>();
+
+  func toHex(bytes : Blob, count : Nat) : Text {
+    let digits = "0123456789abcdef".chars().toArray();
+    var out = "";
+    var n = 0;
+    for (b in bytes.vals()) {
+      if (n < count) {
+        let v = b.toNat();
+        out #= Text.fromChar(digits[v / 16]) # Text.fromChar(digits[v % 16]);
+      };
+      n += 1;
+    };
+    if (n < count) {
+      Runtime.trap("Not enough random bytes");
+    };
+    out;
+  };
+
+  func removeShare(recipeId : Nat) {
+    switch (recipeShares.get(recipeId)) {
+      case (?token) {
+        shares.remove(token);
+        recipeShares.remove(recipeId);
+      };
+      case (null) {};
+    };
+  };
+
+  // Returns the recipe's link token, creating one if it has none yet, so
+  // tapping "share" again gives the same link.
+  public shared ({ caller }) func createShare(recipeId : Nat) : async Text {
+    requireUser(caller);
+    if (not recipes.containsKey(recipeId)) {
+      Runtime.trap("Recept ne obstaja.");
+    };
+    switch (recipeShares.get(recipeId)) {
+      case (?token) { return token };
+      case (null) {};
+    };
+    if (shares.size() >= MAX_SHARES) {
+      Runtime.trap("Doseženo je največje število povezav.");
+    };
+    // Cryptographically secure randomness from the management canister.
+    let token = toHex(await Random.blob(), TOKEN_BYTES);
+    // Other calls may have run during the await: check everything again.
+    if (not recipes.containsKey(recipeId)) {
+      Runtime.trap("Recept ne obstaja.");
+    };
+    switch (recipeShares.get(recipeId)) {
+      case (?existing) { return existing };
+      case (null) {};
+    };
+    if (shares.size() >= MAX_SHARES) {
+      Runtime.trap("Doseženo je največje število povezav.");
+    };
+    if (shares.containsKey(token)) {
+      Runtime.trap("Povezave ni bilo mogoče ustvariti. Poskusite znova.");
+    };
+    shares.add(token, { target = #recipe recipeId; createdAt = Time.now() });
+    recipeShares.add(recipeId, token);
+    token;
+  };
+
+  // Revoking a recipe without a link changes nothing.
+  public shared ({ caller }) func revokeShare(recipeId : Nat) : async () {
+    requireUser(caller);
+    removeShare(recipeId);
+  };
+
+  public shared ({ caller }) func revokeAllShares() : async () {
+    requireUser(caller);
+    shares.clear();
+    recipeShares.clear();
+  };
+
+  public shared query ({ caller }) func listShares() : async [ShareInfo] {
+    requireUser(caller);
+    shares.entries().filterMap(
+      func((token, share) : (Text, Share)) : ?ShareInfo {
+        switch (share.target) {
+          case (#recipe id) {
+            switch (recipes.get(id)) {
+              case (?recipe) {
+                ?{
+                  token;
+                  recipeId = id;
+                  title = recipe.title;
+                  createdAt = share.createdAt;
+                };
+              };
+              case (null) { null };
+            };
+          };
+        };
+      }
+    ).toArray();
+  };
+
+  // The only function anonymous callers may use. An unknown or revoked token
+  // and a deleted recipe all give the same null.
+  public query func getSharedRecipe(token : Text) : async ?SharedRecipe {
+    switch (shares.get(token)) {
+      case (?{ target = #recipe id }) {
+        switch (recipes.get(id)) {
+          case (?recipe) {
+            ?{ title = recipe.title; body = recipe.body; bodyVersion = recipe.bodyVersion };
+          };
+          case (null) { null };
+        };
+      };
+      case (null) { null };
+    };
   };
 };

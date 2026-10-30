@@ -31,6 +31,8 @@ const BACKEND_MESSAGES = [
   "Doseženo je največje število receptov.",
   "Recept ne obstaja.",
   "Recept je bil medtem spremenjen. Osvežite in poskusite znova.",
+  "Doseženo je največje število povezav.",
+  "Povezave ni bilo mogoče ustvariti. Poskusite znova.",
 ];
 
 export function backendErrorMessage(error: unknown, fallback: string): string {

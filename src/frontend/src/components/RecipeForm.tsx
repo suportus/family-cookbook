@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Toggle } from "@/components/ui/toggle";
 import { ChevronDown, ClipboardPaste, Plus, Wind, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAddRecipe, useUpdateRecipe } from "../hooks/useQueries";
 import { goBack, navigate } from "../hooks/useRoute";
@@ -20,15 +21,18 @@ import {
   MAX_STAGES,
   type RecipeBody,
   type RecipeData,
+  type StepRow,
   allTags,
   cleanText,
   fold,
   splitPastedLines,
+  splitPastedSteps,
+  stepNumbers,
   usedPrograms,
 } from "../lib/recipe";
 
 type IngredientField = { key: string; kind: "item" | "section"; text: string };
-type StepField = { key: string; text: string };
+type StepField = { key: string; kind: StepRow["kind"]; text: string };
 type StageField = { key: string; tempC: string; minutes: string; note: string };
 
 const newKey = () => crypto.randomUUID();
@@ -66,8 +70,8 @@ export default function RecipeForm({
   );
   const [steps, setSteps] = useState<StepField[]>(() =>
     recipe?.steps.length
-      ? recipe.steps.map((text) => ({ key: newKey(), text }))
-      : [{ key: newKey(), text: "" }],
+      ? recipe.steps.map((r) => ({ key: newKey(), ...r }))
+      : [{ key: newKey(), kind: "step", text: "" }],
   );
   const [tags, setTags] = useState<string[]>(recipe?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
@@ -134,7 +138,7 @@ export default function RecipeForm({
   // ---------- Steps ----------
 
   const addStep = (after?: number) => {
-    const row: StepField = { key: newKey(), text: "" };
+    const row: StepField = { key: newKey(), kind: "step", text: "" };
     setSteps((rows) => {
       const at = after === undefined ? rows.length : after + 1;
       return [...rows.slice(0, at), row, ...rows.slice(at)];
@@ -143,13 +147,21 @@ export default function RecipeForm({
   };
 
   const pasteSteps = (text: string) => {
-    const rows = splitPastedLines(text).map((t) => ({
-      key: newKey(),
-      text: t,
-    }));
+    const rows = splitPastedSteps(text).map((r) => ({ key: newKey(), ...r }));
     setSteps((old) => [...old.filter((r) => r.text.trim()), ...rows]);
     return rows.length;
   };
+
+  const toggleStepHeading = (key: string) =>
+    setSteps((rows) =>
+      rows.map((r) =>
+        r.key === key
+          ? { ...r, kind: r.kind === "section" ? "step" : "section" }
+          : r,
+      ),
+    );
+
+  const numbers = stepNumbers(steps);
 
   // ---------- Tags ----------
 
@@ -185,7 +197,7 @@ export default function RecipeForm({
   const buildBody = (): RecipeBody => ({
     tags,
     ingredients: ingredients.map(({ kind, text }) => ({ kind, text })),
-    steps: steps.map((s) => s.text),
+    steps: steps.map(({ kind, text }) => ({ kind, text })),
     airFryer: airFryerOpen
       ? {
           program,
@@ -345,16 +357,27 @@ export default function RecipeForm({
               </div>
               <div className="space-y-2">
                 {steps.map((row, index) => (
-                  <div key={row.key} className="flex items-start gap-2">
-                    <span className="mt-2.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                      {index + 1}
-                    </span>
+                  <div
+                    key={row.key}
+                    className={`flex items-start gap-2 ${row.kind === "section" ? "pt-3" : ""}`}
+                  >
+                    {row.kind === "section" ? (
+                      <span className="w-7 shrink-0" />
+                    ) : (
+                      <span className="mt-2.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                        {numbers[index]}
+                      </span>
+                    )}
                     <Textarea
                       id={`row-${row.key}`}
                       value={row.text}
-                      placeholder={`Korak ${index + 1}`}
-                      rows={2}
-                      className="min-h-11 resize-y text-base"
+                      placeholder={
+                        row.kind === "section"
+                          ? "Naslov, npr. Peka"
+                          : `Korak ${numbers[index]}`
+                      }
+                      rows={row.kind === "section" ? 1 : 2}
+                      className={`min-h-11 resize-y text-base ${row.kind === "section" ? "font-bold" : ""}`}
                       enterKeyHint="next"
                       onChange={(e) =>
                         setSteps((rows) =>
@@ -372,26 +395,39 @@ export default function RecipeForm({
                         }
                       }}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-11 w-11 shrink-0"
-                      aria-label="Odstrani"
-                      onClick={() =>
-                        setSteps((rows) =>
-                          rows.filter((r) => r.key !== row.key),
-                        )
-                      }
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="flex shrink-0 flex-col items-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11"
+                        aria-label="Odstrani"
+                        onClick={() =>
+                          setSteps((rows) =>
+                            rows.filter((r) => r.key !== row.key),
+                          )
+                        }
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Toggle
+                        variant="outline"
+                        size="sm"
+                        className="h-8 rounded-full px-2 text-xs data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                        pressed={row.kind === "section"}
+                        onPressedChange={() => toggleStepHeading(row.key)}
+                        aria-label="Naslov namesto koraka"
+                      >
+                        Naslov
+                      </Toggle>
+                    </div>
                   </div>
                 ))}
               </div>
               <PasteBox
-                hint="En korak na vrstico. Številke na začetku se odstranijo."
+                hint="En korak na vrstico. Številke na začetku se odstranijo. Vrstica z ## na začetku ali z dvopičjem na koncu (npr. »Za omako:«) postane naslov, razen če je oštevilčena ali z alinejo."
                 onPaste={pasteSteps}
+                preview={(text) => <StepsPreview text={text} />}
               />
             </div>
 
@@ -669,11 +705,51 @@ export default function RecipeForm({
   );
 }
 
+// Shows how pasted steps will be added, so wrong headings are seen before
+// they are added. A wrong one can then be fixed with the "Naslov" toggle.
+function StepsPreview({ text }: { text: string }) {
+  const rows = splitPastedSteps(text);
+  if (!rows.length) return null;
+  const numbers = stepNumbers(rows);
+  const headings = rows.filter((r) => r.kind === "section").length;
+  return (
+    <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+      <p className="mb-2 font-medium">
+        Predogled: {rows.length - headings} korakov, {headings} naslovov
+      </p>
+      <ol className="space-y-1">
+        {rows.map((row, i) =>
+          row.kind === "section" ? (
+            // biome-ignore lint/suspicious/noArrayIndexKey: preview rows have no id
+            <li key={i} className="flex items-center gap-2 pt-1 font-bold">
+              <Badge className="px-1.5 py-0 text-[10px]">Naslov</Badge>
+              {row.text}
+            </li>
+          ) : (
+            // biome-ignore lint/suspicious/noArrayIndexKey: preview rows have no id
+            <li key={i} className="flex gap-2">
+              <span className="w-5 shrink-0 text-right text-muted-foreground">
+                {numbers[i]}.
+              </span>
+              <span className="line-clamp-2">{row.text}</span>
+            </li>
+          ),
+        )}
+      </ol>
+    </div>
+  );
+}
+
 // "Paste a list, one per line" box under ingredients and steps.
 function PasteBox({
   hint,
   onPaste,
-}: { hint: string; onPaste: (text: string) => number }) {
+  preview,
+}: {
+  hint: string;
+  onPaste: (text: string) => number;
+  preview?: (text: string) => ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
 
@@ -691,6 +767,7 @@ function PasteBox({
           rows={5}
           className="text-base"
         />
+        {preview?.(text)}
         <Button
           type="button"
           variant="outline"

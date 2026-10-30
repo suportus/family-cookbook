@@ -30,17 +30,33 @@ export interface RecipeInput {
   'body' : string,
   'bodyVersion' : bigint,
 }
+export interface ShareInfo {
+  'title' : string,
+  'token' : string,
+  'recipeId' : bigint,
+  'createdAt' : bigint,
+}
+export interface SharedRecipe {
+  'title' : string,
+  'body' : string,
+  'bodyVersion' : bigint,
+}
 export interface _SERVICE {
   'addRecipe' : ActorMethod<[RecipeInput], Recipe>,
   'addUser' : ActorMethod<[Principal], undefined>,
+  'createShare' : ActorMethod<[bigint], string>,
   'deleteRecipe' : ActorMethod<[bigint], undefined>,
   'getAllRecipes' : ActorMethod<[], Array<Recipe>>,
   'getCycleBalance' : ActorMethod<[], bigint>,
   'getFrontendCycleBalance' : ActorMethod<[], [] | [bigint]>,
   'getRecipe' : ActorMethod<[bigint], [] | [Recipe]>,
+  'getSharedRecipe' : ActorMethod<[string], [] | [SharedRecipe]>,
   'importRecipes' : ActorMethod<[Array<ImportItem>], Array<Recipe>>,
+  'listShares' : ActorMethod<[], Array<ShareInfo>>,
   'listUsers' : ActorMethod<[], Array<Principal>>,
   'removeUser' : ActorMethod<[Principal], undefined>,
+  'revokeAllShares' : ActorMethod<[], undefined>,
+  'revokeShare' : ActorMethod<[bigint], undefined>,
   'updateRecipe' : ActorMethod<[bigint, RecipeInput, bigint], Recipe>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;

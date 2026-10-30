@@ -17,6 +17,7 @@ import { PrincipalDisplay } from "./components/PrincipalDisplay";
 import RecipeForm from "./components/RecipeForm";
 import RecipeList, { type ListState } from "./components/RecipeList";
 import RecipeView from "./components/RecipeView";
+import SharedRecipePage from "./components/SharedRecipePage";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useRecipes } from "./hooks/useQueries";
 import { type Route, navigate, useRoute } from "./hooks/useRoute";
@@ -71,6 +72,9 @@ function Screen({
       return <AirFryerPage recipes={recipes} />;
     case "new":
       return <RecipeForm allRecipes={recipes} />;
+    // Handled in App before sign-in; never reached here.
+    case "shared":
+      return null;
     case "recipe":
     case "edit": {
       const recipe = recipes.find((r) => r.id === route.id);
@@ -168,10 +172,21 @@ function MainApp() {
   );
 }
 
+// A share link (#/s/<token>) is checked before sign-in and the allow-list:
+// visitors only see that one recipe, never the login screen.
+function Root() {
+  const route = useRoute();
+  return route.name === "shared" ? (
+    <SharedRecipePage key={route.token} token={route.token} />
+  ) : (
+    <MainApp />
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <MainApp />
+      <Root />
       <Toaster />
     </ThemeProvider>
   );
