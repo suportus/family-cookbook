@@ -1,3 +1,4 @@
+import { Principal } from "@icp-sdk/core/principal";
 import type { ImportItem } from "../backend";
 import {
   BODY_VERSION,
@@ -20,19 +21,38 @@ import {
 //       "body": { "tags": [], "ingredients": [], "steps": [], "airFryer": null } }
 //   ]
 // }
+//
+// Format 2: steps are rows ({ "kind": "step" | "section", "text": "..." }).
+// Format 1 files (steps as plain texts) still import; an older app refuses a
+// format 2 file instead of losing its steps.
+//
+// An owner's backup also has "author" (principal) and "authorName" for each
+// recipe; restoring it as an owner keeps the authors. A contributor's backup
+// has only their own recipes, without authors. Files without authors still
+// import: the importer becomes the author.
 
 const APP = "kuharica";
-const FORMAT = 1;
+const FORMAT = 2;
 
 export type BackupRecipe = {
   title: string;
   body: RecipeBody;
   createdAt?: bigint;
   updatedAt?: bigint;
+  author?: Principal;
 };
 
 function nsToIso(ns: bigint): string {
   return new Date(Number(ns / 1_000_000n)).toISOString();
+}
+
+function toPrincipal(value: unknown): Principal | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    return Principal.fromText(value);
+  } catch {
+    return undefined;
+  }
 }
 
 function isoToNs(value: unknown): bigint | undefined {
@@ -49,6 +69,10 @@ export function backupJson(recipes: RecipeData[]): string {
       exportedAt: new Date().toISOString(),
       recipes: recipes.map((r) => ({
         title: r.title,
+        ...(r.author && {
+          author: r.author.toText(),
+          authorName: r.authorName,
+        }),
         createdAt: nsToIso(r.createdAt),
         updatedAt: nsToIso(r.updatedAt),
         bodyVersion: Number(BODY_VERSION),
@@ -94,6 +118,7 @@ export function parseBackup(text: string): BackupRecipe[] {
         body: bodyFromObject(r.body),
         createdAt: isoToNs(r.createdAt),
         updatedAt: isoToNs(r.updatedAt),
+        author: toPrincipal(r.author),
       };
     })
     .filter((r) => r.title);
@@ -106,6 +131,7 @@ export function toImportItem(r: BackupRecipe): ImportItem {
     bodyVersion: BODY_VERSION,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
+    author: r.author,
   };
 }
 

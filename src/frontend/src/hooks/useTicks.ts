@@ -22,7 +22,25 @@ function load(id: bigint, updatedAt: bigint): Set<number> {
   return new Set();
 }
 
-export function useTicks(id: bigint, updatedAt: bigint) {
+export type Ticks = {
+  ticked: Set<number>;
+  toggle: (index: number) => void;
+  reset: () => void;
+};
+
+// Ticks kept only while the page is open (for shared links).
+export function useMemoryTicks(): Ticks {
+  const [ticked, setTicked] = useState<Set<number>>(() => new Set());
+  const toggle = (index: number) => {
+    const next = new Set(ticked);
+    if (next.has(index)) next.delete(index);
+    else next.add(index);
+    setTicked(next);
+  };
+  return { ticked, toggle, reset: () => setTicked(new Set()) };
+}
+
+export function useTicks(id: bigint, updatedAt: bigint): Ticks {
   const [ticked, setTicked] = useState(() => load(id, updatedAt));
 
   const save = useCallback(

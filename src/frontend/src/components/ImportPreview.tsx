@@ -127,8 +127,21 @@ export default function ImportPreview({
               <p className="text-sm text-muted-foreground">
                 Sestavine:{" "}
                 {c.body.ingredients.filter((r) => r.kind === "item").length} ·
-                Koraki: {c.body.steps.length}
+                Koraki: {c.body.steps.filter((r) => r.kind === "step").length}
               </p>
+              {c.body.steps.some((r) => r.kind === "section") && (
+                <p className="text-sm">
+                  <span className="text-muted-foreground">
+                    Naslovi v navodilih:{" "}
+                  </span>
+                  <span className="font-bold">
+                    {c.body.steps
+                      .filter((r) => r.kind === "section")
+                      .map((r) => `»${r.text}«`)
+                      .join(", ")}
+                  </span>
+                </p>
+              )}
               {c.body.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {c.body.tags.map((tag) => (

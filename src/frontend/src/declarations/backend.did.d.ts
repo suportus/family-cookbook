@@ -15,33 +15,66 @@ export interface ImportItem {
   'body' : string,
   'createdAt' : [] | [bigint],
   'bodyVersion' : bigint,
+  'author' : [] | [Principal],
   'updatedAt' : [] | [bigint],
-}
-export interface Recipe {
-  'id' : bigint,
-  'title' : string,
-  'body' : string,
-  'createdAt' : bigint,
-  'bodyVersion' : bigint,
-  'updatedAt' : bigint,
 }
 export interface RecipeInput {
   'title' : string,
   'body' : string,
   'bodyVersion' : bigint,
 }
+export interface RecipeView {
+  'id' : bigint,
+  'title' : string,
+  'body' : string,
+  'createdAt' : bigint,
+  'authorName' : string,
+  'canEdit' : boolean,
+  'isMine' : boolean,
+  'bodyVersion' : bigint,
+  'author' : [] | [Principal],
+  'updatedAt' : bigint,
+}
+export type Role = { 'owner' : null } |
+  { 'contributor' : null };
+export interface ShareInfo {
+  'title' : string,
+  'token' : string,
+  'recipeId' : bigint,
+  'createdAt' : bigint,
+}
+export interface SharedRecipe {
+  'title' : string,
+  'body' : string,
+  'bodyVersion' : bigint,
+}
+export interface UserInfo {
+  'name' : [] | [string],
+  'role' : Role,
+  'user' : Principal,
+}
 export interface _SERVICE {
-  'addRecipe' : ActorMethod<[RecipeInput], Recipe>,
+  'addRecipe' : ActorMethod<[RecipeInput], RecipeView>,
   'addUser' : ActorMethod<[Principal], undefined>,
+  'assignUnassignedRecipes' : ActorMethod<[Principal], bigint>,
+  'countUnassignedRecipes' : ActorMethod<[], bigint>,
+  'createShare' : ActorMethod<[bigint], string>,
   'deleteRecipe' : ActorMethod<[bigint], undefined>,
-  'getAllRecipes' : ActorMethod<[], Array<Recipe>>,
+  'getAllRecipes' : ActorMethod<[], Array<RecipeView>>,
   'getCycleBalance' : ActorMethod<[], bigint>,
   'getFrontendCycleBalance' : ActorMethod<[], [] | [bigint]>,
-  'getRecipe' : ActorMethod<[bigint], [] | [Recipe]>,
-  'importRecipes' : ActorMethod<[Array<ImportItem>], Array<Recipe>>,
-  'listUsers' : ActorMethod<[], Array<Principal>>,
+  'getMe' : ActorMethod<[], { 'name' : [] | [string], 'isOwner' : boolean }>,
+  'getRecipe' : ActorMethod<[bigint], [] | [RecipeView]>,
+  'getSharedRecipe' : ActorMethod<[string], [] | [SharedRecipe]>,
+  'importRecipes' : ActorMethod<[Array<ImportItem>], Array<RecipeView>>,
+  'listShares' : ActorMethod<[], Array<ShareInfo>>,
+  'listUsers' : ActorMethod<[], Array<UserInfo>>,
   'removeUser' : ActorMethod<[Principal], undefined>,
-  'updateRecipe' : ActorMethod<[bigint, RecipeInput, bigint], Recipe>,
+  'revokeAllShares' : ActorMethod<[], undefined>,
+  'revokeShare' : ActorMethod<[bigint], undefined>,
+  'setOwner' : ActorMethod<[Principal, boolean], undefined>,
+  'setUserName' : ActorMethod<[Principal, string], undefined>,
+  'updateRecipe' : ActorMethod<[bigint, RecipeInput, bigint], RecipeView>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

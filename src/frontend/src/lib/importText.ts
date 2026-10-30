@@ -4,10 +4,12 @@ import {
   type IngredientRow,
   MAX_STAGES,
   type RecipeBody,
+  type StepRow,
   cleanBody,
   cleanText,
   fold,
   splitPastedLines,
+  stepFromLine,
 } from "./recipe";
 
 // Parses pasted text in this format (recipes separated by a "---" line):
@@ -23,6 +25,11 @@ import {
 //   Navodila:
 //   1. Bedra osuši.
 //   2. Natri z marinado.
+//   ## Peka
+//   1. Peci v air fryerju.
+//
+// Under "Navodila:", a line that starts with "##" or ends with ":" is a
+// heading, unless it is numbered or bulleted (see `stepFromLine`).
 
 export type ParsedRecipe = {
   title: string;
@@ -111,7 +118,7 @@ function parseOne(block: string): ParsedRecipe | null {
   const warnings: string[] = [];
   const title = lines[titleIndex];
   const ingredients: IngredientRow[] = [];
-  const steps: string[] = [];
+  const steps: StepRow[] = [];
   let tags: string[] = [];
   let airFryer: AirFryer | null = null;
   let mode: Mode = "none";
@@ -127,7 +134,8 @@ function parseOne(block: string): ParsedRecipe | null {
         }
       }
     } else if (mode === "steps") {
-      steps.push(...splitPastedLines(line));
+      const row = stepFromLine(line);
+      if (row) steps.push(row);
     } else {
       warnings.push(`Neznana vrstica: »${line}«`);
     }

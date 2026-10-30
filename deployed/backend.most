@@ -17,19 +17,37 @@ type Recipe__552182475 =
     title : Text;
     updatedAt : Int
   };
+type ShareTarget__558090598 = {#recipe : Nat};
+type Share__587096241 = {createdAt : Int; target : ShareTarget__558090598};
 actor {
   stable MAX_BODY_CHARS : Nat;
   stable MAX_RECIPES : Nat;
+  stable MAX_SHARES : Nat;
   stable MAX_TITLE_CHARS : Nat;
+  stable TOKEN_BYTES : Nat;
   stable allowedUsers :
     {
       var root : Node__1000929467<Principal, Bool>;
       var size : Nat__1040412405
     };
   stable var nextId : Nat;
+  stable recipeAuthors :
+    {var root : Node__1000929467<Nat, Principal>; var size : Nat__1040412405};
+  stable recipeShares :
+    {var root : Node__1000929467<Nat, Text>; var size : Nat__1040412405};
   stable recipes :
     {
       var root : Node__1000929467<Nat, Recipe__552182475>;
+      var size : Nat__1040412405
+    };
+  stable shares :
+    {
+      var root : Node__1000929467<Text, Share__587096241>;
+      var size : Nat__1040412405
+    };
+  stable userNames :
+    {
+      var root : Node__1000929467<Principal, Text>;
       var size : Nat__1040412405
     }
 };

@@ -14,34 +14,82 @@ export const idlFactory = ({ IDL }) => {
     'body' : IDL.Text,
     'bodyVersion' : IDL.Nat,
   });
-  const Recipe = IDL.Record({
+  const RecipeView = IDL.Record({
     'id' : IDL.Nat,
     'title' : IDL.Text,
     'body' : IDL.Text,
     'createdAt' : IDL.Int,
+    'authorName' : IDL.Text,
+    'canEdit' : IDL.Bool,
+    'isMine' : IDL.Bool,
     'bodyVersion' : IDL.Nat,
+    'author' : IDL.Opt(IDL.Principal),
     'updatedAt' : IDL.Int,
+  });
+  const SharedRecipe = IDL.Record({
+    'title' : IDL.Text,
+    'body' : IDL.Text,
+    'bodyVersion' : IDL.Nat,
   });
   const ImportItem = IDL.Record({
     'title' : IDL.Text,
     'body' : IDL.Text,
     'createdAt' : IDL.Opt(IDL.Int),
     'bodyVersion' : IDL.Nat,
+    'author' : IDL.Opt(IDL.Principal),
     'updatedAt' : IDL.Opt(IDL.Int),
+  });
+  const ShareInfo = IDL.Record({
+    'title' : IDL.Text,
+    'token' : IDL.Text,
+    'recipeId' : IDL.Nat,
+    'createdAt' : IDL.Int,
+  });
+  const Role = IDL.Variant({ 'owner' : IDL.Null, 'contributor' : IDL.Null });
+  const UserInfo = IDL.Record({
+    'name' : IDL.Opt(IDL.Text),
+    'role' : Role,
+    'user' : IDL.Principal,
   });
   
   return IDL.Service({
-    'addRecipe' : IDL.Func([RecipeInput], [Recipe], []),
+    'addRecipe' : IDL.Func([RecipeInput], [RecipeView], []),
     'addUser' : IDL.Func([IDL.Principal], [], []),
+    'assignUnassignedRecipes' : IDL.Func([IDL.Principal], [IDL.Nat], []),
+    'countUnassignedRecipes' : IDL.Func([], [IDL.Nat], []),
+    'createShare' : IDL.Func([IDL.Nat], [IDL.Text], []),
     'deleteRecipe' : IDL.Func([IDL.Nat], [], []),
-    'getAllRecipes' : IDL.Func([], [IDL.Vec(Recipe)], ['query']),
+    'getAllRecipes' : IDL.Func([], [IDL.Vec(RecipeView)], ['query']),
     'getCycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'getFrontendCycleBalance' : IDL.Func([], [IDL.Opt(IDL.Nat)], []),
-    'getRecipe' : IDL.Func([IDL.Nat], [IDL.Opt(Recipe)], ['query']),
-    'importRecipes' : IDL.Func([IDL.Vec(ImportItem)], [IDL.Vec(Recipe)], []),
-    'listUsers' : IDL.Func([], [IDL.Vec(IDL.Principal)], []),
+    'getMe' : IDL.Func(
+        [],
+        [IDL.Record({ 'name' : IDL.Opt(IDL.Text), 'isOwner' : IDL.Bool })],
+        ['query'],
+      ),
+    'getRecipe' : IDL.Func([IDL.Nat], [IDL.Opt(RecipeView)], ['query']),
+    'getSharedRecipe' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(SharedRecipe)],
+        ['query'],
+      ),
+    'importRecipes' : IDL.Func(
+        [IDL.Vec(ImportItem)],
+        [IDL.Vec(RecipeView)],
+        [],
+      ),
+    'listShares' : IDL.Func([], [IDL.Vec(ShareInfo)], ['query']),
+    'listUsers' : IDL.Func([], [IDL.Vec(UserInfo)], []),
     'removeUser' : IDL.Func([IDL.Principal], [], []),
-    'updateRecipe' : IDL.Func([IDL.Nat, RecipeInput, IDL.Int], [Recipe], []),
+    'revokeAllShares' : IDL.Func([], [], []),
+    'revokeShare' : IDL.Func([IDL.Nat], [], []),
+    'setOwner' : IDL.Func([IDL.Principal, IDL.Bool], [], []),
+    'setUserName' : IDL.Func([IDL.Principal, IDL.Text], [], []),
+    'updateRecipe' : IDL.Func(
+        [IDL.Nat, RecipeInput, IDL.Int],
+        [RecipeView],
+        [],
+      ),
   });
 };
 

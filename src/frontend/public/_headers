@@ -1,6 +1,10 @@
-# HTML and the manifest must revalidate so a deploy is picked up right away
+# HTML and the manifest must revalidate so a deploy is picked up right away.
+# No search engine indexing (shared recipe links included) and no Referer
+# header to other sites.
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
 
 /manifest.json
   Cache-Control: public, max-age=0, must-revalidate

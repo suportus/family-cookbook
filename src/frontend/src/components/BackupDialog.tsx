@@ -9,7 +9,7 @@ import {
 import { Download, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { useRecipes } from "../hooks/useQueries";
+import { useMe, useRecipes } from "../hooks/useQueries";
 import {
   backupFileName,
   backupJson,
@@ -25,7 +25,10 @@ export default function BackupDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { data: recipes = [], isSuccess } = useRecipes();
+  const { data: all = [], isSuccess } = useRecipes();
+  // A contributor backs up only their own recipes.
+  const isOwner = useMe().data?.isOwner ?? false;
+  const recipes = isOwner ? all : all.filter((r) => r.isMine);
   const fileInput = useRef<HTMLInputElement>(null);
   const [candidates, setCandidates] = useState<ImportCandidate[] | null>(null);
 
@@ -63,8 +66,8 @@ export default function BackupDialog({
         <DialogHeader>
           <DialogTitle>Varnostna kopija</DialogTitle>
           <DialogDescription>
-            Vsi recepti v eni datoteki JSON. Shranite jo na varno mesto, npr. v
-            oblak ali na računalnik.
+            {isOwner ? "Vsi recepti" : "Vaši recepti"} v eni datoteki JSON.
+            Shranite jo na varno mesto, npr. v oblak ali na računalnik.
           </DialogDescription>
         </DialogHeader>
 
@@ -79,7 +82,9 @@ export default function BackupDialog({
             <div className="space-y-2 rounded-lg border p-4">
               <p className="font-medium">Izvozi</p>
               <p className="text-sm text-muted-foreground">
-                Prenese datoteko z vsemi recepti ({recipes.length}).
+                {isOwner
+                  ? `Prenese datoteko z vsemi recepti (${recipes.length}).`
+                  : `Prenese datoteko z vašimi recepti (${recipes.length}).`}
               </p>
               <Button
                 className="w-full gap-2"

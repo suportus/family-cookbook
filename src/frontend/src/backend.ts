@@ -56,52 +56,102 @@ export interface ImportItem {
     body: string;
     createdAt?: bigint;
     bodyVersion: bigint;
+    author?: Principal;
     updatedAt?: bigint;
-}
-export interface Recipe {
-    id: bigint;
-    title: string;
-    body: string;
-    createdAt: bigint;
-    bodyVersion: bigint;
-    updatedAt: bigint;
 }
 export interface RecipeInput {
     title: string;
     body: string;
     bodyVersion: bigint;
 }
+export interface RecipeView {
+    id: bigint;
+    title: string;
+    body: string;
+    createdAt: bigint;
+    authorName: string;
+    canEdit: boolean;
+    isMine: boolean;
+    bodyVersion: bigint;
+    author?: Principal;
+    updatedAt: bigint;
+}
+export interface ShareInfo {
+    title: string;
+    token: string;
+    recipeId: bigint;
+    createdAt: bigint;
+}
+export interface SharedRecipe {
+    title: string;
+    body: string;
+    bodyVersion: bigint;
+}
+export interface UserInfo {
+    name?: string;
+    role: Role;
+    user: Principal;
+}
+export enum Role {
+    owner = "owner",
+    contributor = "contributor"
+}
 export interface backendInterface {
-    addRecipe(input: RecipeInput): Promise<Recipe>;
+    addRecipe(input: RecipeInput): Promise<RecipeView>;
     addUser(user: Principal): Promise<void>;
+    assignUnassignedRecipes(author: Principal): Promise<bigint>;
+    countUnassignedRecipes(): Promise<bigint>;
+    createShare(recipeId: bigint): Promise<string>;
     deleteRecipe(id: bigint): Promise<void>;
-    getAllRecipes(): Promise<Array<Recipe>>;
+    getAllRecipes(): Promise<Array<RecipeView>>;
     getCycleBalance(): Promise<bigint>;
     getFrontendCycleBalance(): Promise<bigint | null>;
-    getRecipe(id: bigint): Promise<Recipe | null>;
-    importRecipes(items: Array<ImportItem>): Promise<Array<Recipe>>;
-    listUsers(): Promise<Array<Principal>>;
+    getMe(): Promise<{
+        name?: string;
+        isOwner: boolean;
+    }>;
+    getRecipe(id: bigint): Promise<RecipeView | null>;
+    getSharedRecipe(token: string): Promise<SharedRecipe | null>;
+    importRecipes(items: Array<ImportItem>): Promise<Array<RecipeView>>;
+    listShares(): Promise<Array<ShareInfo>>;
+    listUsers(): Promise<Array<UserInfo>>;
     removeUser(user: Principal): Promise<void>;
-    updateRecipe(id: bigint, input: RecipeInput, expectedUpdatedAt: bigint): Promise<Recipe>;
+    revokeAllShares(): Promise<void>;
+    revokeShare(recipeId: bigint): Promise<void>;
+    setOwner(user: Principal, owner: boolean): Promise<void>;
+    setUserName(user: Principal, name: string): Promise<void>;
+    updateRecipe(id: bigint, input: RecipeInput, expectedUpdatedAt: bigint): Promise<RecipeView>;
 }
-import type { ImportItem as _ImportItem, Recipe as _Recipe } from "./declarations/backend.did";
+import type { ImportItem as _ImportItem, RecipeView as _RecipeView, Role as _Role, SharedRecipe as _SharedRecipe, UserInfo as _UserInfo } from "./declarations/backend.did";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>){}
-    async addRecipe(arg0: RecipeInput): Promise<Recipe> {
+    async addRecipe(arg0: RecipeInput): Promise<RecipeView> {
         const result = await this.actor.addRecipe(arg0);
-        return result;
+        return from_candid_RecipeView_n1(result);
     }
     async addUser(arg0: Principal): Promise<void> {
         const result = await this.actor.addUser(arg0);
+        return result;
+    }
+    async assignUnassignedRecipes(arg0: Principal): Promise<bigint> {
+        const result = await this.actor.assignUnassignedRecipes(arg0);
+        return result;
+    }
+    async countUnassignedRecipes(): Promise<bigint> {
+        const result = await this.actor.countUnassignedRecipes();
+        return result;
+    }
+    async createShare(arg0: bigint): Promise<string> {
+        const result = await this.actor.createShare(arg0);
         return result;
     }
     async deleteRecipe(arg0: bigint): Promise<void> {
         const result = await this.actor.deleteRecipe(arg0);
         return result;
     }
-    async getAllRecipes(): Promise<Array<Recipe>> {
+    async getAllRecipes(): Promise<Array<RecipeView>> {
         const result = await this.actor.getAllRecipes();
-        return result;
+        return from_candid_vec_n4(result);
     }
     async getCycleBalance(): Promise<bigint> {
         const result = await this.actor.getCycleBalance();
@@ -109,49 +159,169 @@ export class Backend implements backendInterface {
     }
     async getFrontendCycleBalance(): Promise<bigint | null> {
         const result = await this.actor.getFrontendCycleBalance();
-        return from_candid_opt_n1(result);
+        return from_candid_opt_n5(result);
     }
-    async getRecipe(arg0: bigint): Promise<Recipe | null> {
+    async getMe(): Promise<{
+        name?: string;
+        isOwner: boolean;
+    }> {
+        const result = await this.actor.getMe();
+        return from_candid_record_n6(result);
+    }
+    async getRecipe(arg0: bigint): Promise<RecipeView | null> {
         const result = await this.actor.getRecipe(arg0);
-        return from_candid_opt_n2(result);
+        return from_candid_opt_n8(result);
     }
-    async importRecipes(arg0: Array<ImportItem>): Promise<Array<Recipe>> {
-        const result = await this.actor.importRecipes(to_candid_vec_n3(arg0));
+    async getSharedRecipe(arg0: string): Promise<SharedRecipe | null> {
+        const result = await this.actor.getSharedRecipe(arg0);
+        return from_candid_opt_n9(result);
+    }
+    async importRecipes(arg0: Array<ImportItem>): Promise<Array<RecipeView>> {
+        const result = await this.actor.importRecipes(to_candid_vec_n10(arg0));
+        return from_candid_vec_n4(result);
+    }
+    async listShares(): Promise<Array<ShareInfo>> {
+        const result = await this.actor.listShares();
         return result;
     }
-    async listUsers(): Promise<Array<Principal>> {
+    async listUsers(): Promise<Array<UserInfo>> {
         const result = await this.actor.listUsers();
-        return result;
+        return from_candid_vec_n13(result);
     }
     async removeUser(arg0: Principal): Promise<void> {
         const result = await this.actor.removeUser(arg0);
         return result;
     }
-    async updateRecipe(arg0: bigint, arg1: RecipeInput, arg2: bigint): Promise<Recipe> {
-        const result = await this.actor.updateRecipe(arg0, arg1, arg2);
+    async revokeAllShares(): Promise<void> {
+        const result = await this.actor.revokeAllShares();
         return result;
     }
+    async revokeShare(arg0: bigint): Promise<void> {
+        const result = await this.actor.revokeShare(arg0);
+        return result;
+    }
+    async setOwner(arg0: Principal, arg1: boolean): Promise<void> {
+        const result = await this.actor.setOwner(arg0, arg1);
+        return result;
+    }
+    async setUserName(arg0: Principal, arg1: string): Promise<void> {
+        const result = await this.actor.setUserName(arg0, arg1);
+        return result;
+    }
+    async updateRecipe(arg0: bigint, arg1: RecipeInput, arg2: bigint): Promise<RecipeView> {
+        const result = await this.actor.updateRecipe(arg0, arg1, arg2);
+        return from_candid_RecipeView_n1(result);
+    }
 }
-function from_candid_opt_n1(value: [] | [bigint]): bigint | null {
+function from_candid_RecipeView_n1(value: _RecipeView): RecipeView {
+    return from_candid_record_n2(value);
+}
+function from_candid_Role_n16(value: _Role): Role {
+    return "owner" in value ? Role.owner : "contributor" in value ? Role.contributor : value;
+}
+function from_candid_UserInfo_n14(value: _UserInfo): UserInfo {
+    return from_candid_record_n15(value);
+}
+function from_candid_opt_n3(value: [] | [Principal]): Principal | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n2(value: [] | [_Recipe]): Recipe | null {
+function from_candid_opt_n5(value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function to_candid_ImportItem_n4(value: ImportItem): _ImportItem {
-    return to_candid_record_n5(value);
+function from_candid_opt_n7(value: [] | [string]): string | null {
+    return value.length === 0 ? null : value[0];
 }
-function to_candid_record_n5(value: {
+function from_candid_opt_n8(value: [] | [_RecipeView]): RecipeView | null {
+    return value.length === 0 ? null : from_candid_RecipeView_n1(value[0]);
+}
+function from_candid_opt_n9(value: [] | [_SharedRecipe]): SharedRecipe | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n15(value: {
+    name: [] | [string];
+    role: _Role;
+    user: Principal;
+}): {
+    name?: string;
+    role: Role;
+    user: Principal;
+} {
+    return {
+        name: record_opt_to_undefined(from_candid_opt_n7(value.name)),
+        role: from_candid_Role_n16(value.role),
+        user: value.user
+    };
+}
+function from_candid_record_n2(value: {
+    id: bigint;
+    title: string;
+    body: string;
+    createdAt: bigint;
+    authorName: string;
+    canEdit: boolean;
+    isMine: boolean;
+    bodyVersion: bigint;
+    author: [] | [Principal];
+    updatedAt: bigint;
+}): {
+    id: bigint;
+    title: string;
+    body: string;
+    createdAt: bigint;
+    authorName: string;
+    canEdit: boolean;
+    isMine: boolean;
+    bodyVersion: bigint;
+    author?: Principal;
+    updatedAt: bigint;
+} {
+    return {
+        id: value.id,
+        title: value.title,
+        body: value.body,
+        createdAt: value.createdAt,
+        authorName: value.authorName,
+        canEdit: value.canEdit,
+        isMine: value.isMine,
+        bodyVersion: value.bodyVersion,
+        author: record_opt_to_undefined(from_candid_opt_n3(value.author)),
+        updatedAt: value.updatedAt
+    };
+}
+function from_candid_record_n6(value: {
+    name: [] | [string];
+    isOwner: boolean;
+}): {
+    name?: string;
+    isOwner: boolean;
+} {
+    return {
+        name: record_opt_to_undefined(from_candid_opt_n7(value.name)),
+        isOwner: value.isOwner
+    };
+}
+function from_candid_vec_n13(value: Array<_UserInfo>): Array<UserInfo> {
+    return value.map((x)=>from_candid_UserInfo_n14(x));
+}
+function from_candid_vec_n4(value: Array<_RecipeView>): Array<RecipeView> {
+    return value.map((x)=>from_candid_RecipeView_n1(x));
+}
+function to_candid_ImportItem_n11(value: ImportItem): _ImportItem {
+    return to_candid_record_n12(value);
+}
+function to_candid_record_n12(value: {
     title: string;
     body: string;
     createdAt?: bigint;
     bodyVersion: bigint;
+    author?: Principal;
     updatedAt?: bigint;
 }): {
     title: string;
     body: string;
     createdAt: [] | [bigint];
     bodyVersion: bigint;
+    author: [] | [Principal];
     updatedAt: [] | [bigint];
 } {
     return {
@@ -159,11 +329,12 @@ function to_candid_record_n5(value: {
         body: value.body,
         createdAt: value.createdAt ? candid_some(value.createdAt) : candid_none(),
         bodyVersion: value.bodyVersion,
+        author: value.author ? candid_some(value.author) : candid_none(),
         updatedAt: value.updatedAt ? candid_some(value.updatedAt) : candid_none()
     };
 }
-function to_candid_vec_n3(value: Array<ImportItem>): Array<_ImportItem> {
-    return value.map((x)=>to_candid_ImportItem_n4(x));
+function to_candid_vec_n10(value: Array<ImportItem>): Array<_ImportItem> {
+    return value.map((x)=>to_candid_ImportItem_n11(x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

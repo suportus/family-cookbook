@@ -13,6 +13,7 @@ import {
   ClipboardPaste,
   DatabaseBackup,
   Fuel,
+  Link,
   LogOut,
   Moon,
   Sun,
@@ -26,6 +27,7 @@ import { type Route, goBack, navigate } from "../hooks/useRoute";
 import BackupDialog from "./BackupDialog";
 import { CyclesDialog } from "./CyclesDialog";
 import ImportTextDialog from "./ImportTextDialog";
+import SharesDialog from "./SharesDialog";
 
 export default function Header({ route }: { route: Route }) {
   const { clear } = useInternetIdentity();
@@ -34,6 +36,7 @@ export default function Header({ route }: { route: Route }) {
   const [cyclesOpen, setCyclesOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [sharesOpen, setSharesOpen] = useState(false);
 
   const handleLogout = () => {
     clear();
@@ -108,6 +111,13 @@ export default function Header({ route }: { route: Route }) {
                   Uvozi recepte
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  onClick={() => setSharesOpen(true)}
+                  className="cursor-pointer py-2.5"
+                >
+                  <Link className="mr-3 h-4 w-4 text-muted-foreground" />
+                  Skupne povezave
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={() => setBackupOpen(true)}
                   className="cursor-pointer py-2.5"
                 >
@@ -138,6 +148,7 @@ export default function Header({ route }: { route: Route }) {
       <CyclesDialog open={cyclesOpen} onOpenChange={setCyclesOpen} />
       <BackupDialog open={backupOpen} onOpenChange={setBackupOpen} />
       <ImportTextDialog open={importOpen} onOpenChange={setImportOpen} />
+      <SharesDialog open={sharesOpen} onOpenChange={setSharesOpen} />
     </>
   );
 }
