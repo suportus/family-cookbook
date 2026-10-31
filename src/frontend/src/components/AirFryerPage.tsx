@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Search, Wind } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
+import { useChangeFade } from "../hooks/useReveal";
 import { navigate } from "../hooks/useRoute";
 import {
   type RecipeData,
@@ -19,12 +20,16 @@ function joinValues(values: (number | null)[], unit: string): string {
 // `scopeToggle` ("Vsi / Moji") is only given when there are two or more authors.
 export default function AirFryerPage({
   recipes,
+  scope,
   scopeToggle,
 }: {
   recipes: RecipeData[];
+  scope: string;
   scopeToggle: ReactNode;
 }) {
   const [query, setQuery] = useState("");
+  // The table fades in when "Vsi / Moji" changes, not while typing.
+  const fade = useChangeFade(scope);
 
   const rows = useMemo(
     () =>
@@ -58,13 +63,19 @@ export default function AirFryerPage({
       </div>
 
       {rows.length === 0 ? (
-        <p className="py-12 text-center text-muted-foreground">
+        <p
+          key={scope}
+          className={`py-12 text-center text-muted-foreground ${fade}`}
+        >
           {query
             ? "Ni zadetkov."
             : "Noben recept še nima nastavitev za air fryer."}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div
+          key={scope}
+          className={`overflow-x-auto rounded-lg border ${fade}`}
+        >
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-left">
               <tr>

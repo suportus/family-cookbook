@@ -17,7 +17,7 @@ export default {
         extend: {
             colors: {
                 border: 'oklch(var(--border))',
-                input: 'oklch(var(--input))',
+                input: 'oklch(var(--input) / <alpha-value>)',
                 ring: 'oklch(var(--ring) / <alpha-value>)',
                 background: 'oklch(var(--background))',
                 foreground: 'oklch(var(--foreground))',
@@ -73,7 +73,8 @@ export default {
                 sm: 'calc(var(--radius) - 4px)'
             },
             boxShadow: {
-                xs: '0 1px 2px 0 rgba(0,0,0,0.05)'
+                xs: '0 1px 2px 0 rgba(0,0,0,0.05)',
+                surface: 'var(--card-shadow)'
             },
             keyframes: {
                 'accordion-down': {

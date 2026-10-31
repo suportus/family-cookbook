@@ -43,14 +43,32 @@ export function routeHash(route: Route): string {
 // True while a replace() is reported, so the entry keeps its own "inApp" mark.
 let replacing = false;
 
+// Scroll position of the recipe list, restored when coming Back to it (the
+// browser's or the app's back button). Links inside the app open the list at
+// the top.
+let lastHash = window.location.hash;
+let byLink = false;
+let listScrollY = 0;
+let restoreList = false;
+
+export function takeListScroll(): number | null {
+  if (!restoreList) return null;
+  restoreList = false;
+  return listScrollY;
+}
+
 export function navigate(route: Route, { replace = false } = {}) {
   const hash = routeHash(route);
   if (replace) {
     window.history.replaceState(window.history.state, "", hash);
     replacing = true;
+    byLink = true;
     window.dispatchEvent(new HashChangeEvent("hashchange"));
     replacing = false;
-  } else {
+    byLink = false;
+  } else if (window.location.hash !== hash) {
+    // Reported later by a hashchange event, which clears the flag.
+    byLink = true;
     window.location.hash = hash;
   }
 }
@@ -73,8 +91,15 @@ export function useRoute(): Route {
       if (!replacing && !window.history.state?.inApp) {
         window.history.replaceState({ inApp: true }, "");
       }
+      // Both App and Root listen; do the bookkeeping once per change.
+      if (lastHash !== window.location.hash) {
+        if (parse(lastHash).name === "list") listScrollY = window.scrollY;
+        restoreList = !byLink;
+        byLink = false;
+        lastHash = window.location.hash;
+        window.scrollTo(0, 0);
+      }
       setRoute(parse(window.location.hash));
-      window.scrollTo(0, 0);
     };
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);

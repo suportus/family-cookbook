@@ -10,7 +10,7 @@ export default function ScopeToggle({
   onChange: (value: Scope) => void;
 }) {
   return (
-    <div className="flex shrink-0 rounded-full border p-0.5 text-sm">
+    <div className="flex shrink-0 rounded-full border border-input p-0.5 text-sm">
       {(
         [
           ["all", "Vsi"],

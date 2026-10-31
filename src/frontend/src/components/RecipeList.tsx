@@ -10,8 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChefHat, Plus, Search, X } from "lucide-react";
-import { type ReactNode, useMemo } from "react";
-import { navigate } from "../hooks/useRoute";
+import { type ReactNode, useEffect, useLayoutEffect, useMemo } from "react";
+import {
+  markFirstLoadDone,
+  useChangeFade,
+  useReveal,
+} from "../hooks/useReveal";
+import { navigate, takeListScroll } from "../hooks/useRoute";
 import {
   type RecipeData,
   airFryerLine,
@@ -39,12 +44,14 @@ export default function RecipeList({
   state,
   onChange,
   authors,
+  scope,
   scopeToggle,
 }: {
   recipes: RecipeData[];
   state: ListState;
   onChange: (state: ListState) => void;
   authors: { key: string; label: string }[];
+  scope: string;
   scopeToggle: ReactNode;
 }) {
   // An author that no longer has recipes in view filters nothing.
@@ -74,6 +81,13 @@ export default function RecipeList({
         : Number(b.createdAt - a.createdAt) || Number(b.id - a.id),
     );
   }, [recipes, state, author]);
+
+  // New results fade in when a filter or the sort changes; typing in the
+  // search box updates them without animation.
+  const filterKey = `${scope}|${state.tag}|${author}|${state.sort}`;
+  const fade = useChangeFade(filterKey);
+
+  useEffect(() => markFirstLoadDone(), []);
 
   return (
     <div className="container px-4 py-4 pb-28">
@@ -127,57 +141,65 @@ export default function RecipeList({
               </Button>
             ))}
           </div>
-          {authors.length > 1 && (
-            <Select
-              value={author ?? ALL_AUTHORS}
-              onValueChange={(v) =>
-                onChange({ ...state, author: v === ALL_AUTHORS ? null : v })
-              }
-            >
-              <SelectTrigger
-                className="h-9 w-auto max-w-[45%] shrink-0 rounded-full"
-                aria-label="Avtor"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_AUTHORS}>Avtor: vsi</SelectItem>
-                {authors.map((a) => (
-                  <SelectItem key={a.key} value={a.key}>
-                    {a.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
           <span className="text-muted-foreground">
             {shown.length === recipes.length
               ? `Receptov: ${recipes.length}`
               : `Prikazanih: ${shown.length} od ${recipes.length}`}
           </span>
-          <div className="flex rounded-full border p-0.5">
-            {(
-              [
-                ["newest", "Najnovejši"],
-                ["title", "A–Ž"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => onChange({ ...state, sort: value })}
-                className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
-                  state.sort === value
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground"
-                }`}
+          {/* With the author filter, phones always put it and the sort on a
+              second line, so the row doesn't jump while typing a search. */}
+          <div
+            className={`flex items-center gap-2 ${
+              authors.length > 1 ? "max-sm:w-full max-sm:justify-between" : ""
+            }`}
+          >
+            {authors.length > 1 && (
+              <Select
+                value={author ?? ALL_AUTHORS}
+                onValueChange={(v) =>
+                  onChange({ ...state, author: v === ALL_AUTHORS ? null : v })
+                }
               >
-                {label}
-              </button>
-            ))}
+                <SelectTrigger
+                  className="h-9 w-auto max-w-[11rem] shrink-0 rounded-full"
+                  aria-label="Avtor"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_AUTHORS}>Avtor: vsi</SelectItem>
+                  {authors.map((a) => (
+                    <SelectItem key={a.key} value={a.key}>
+                      {a.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <div className="flex rounded-full border border-input p-0.5">
+              {(
+                [
+                  ["newest", "Najnovejši"],
+                  ["title", "A–Ž"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onChange({ ...state, sort: value })}
+                  className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
+                    state.sort === value
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -203,15 +225,22 @@ export default function RecipeList({
           </CardContent>
         </Card>
       ) : (
-        <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map((recipe) => (
-            <RecipeCard
-              key={String(recipe.id)}
-              recipe={recipe}
-              showAuthor={authors.length > 1}
-            />
-          ))}
-        </div>
+        <>
+          <RestoreScroll />
+          <div
+            key={filterKey}
+            className={`mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${fade}`}
+          >
+            {shown.map((recipe, index) => (
+              <RecipeCard
+                key={String(recipe.id)}
+                recipe={recipe}
+                index={index}
+                showAuthor={authors.length > 1}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       <Button
@@ -226,21 +255,35 @@ export default function RecipeList({
   );
 }
 
+// Coming Back to the list: return to where it was, instantly. Placed before
+// the cards so it scrolls before they check whether they are on screen.
+function RestoreScroll() {
+  useLayoutEffect(() => {
+    const y = takeListScroll();
+    if (y !== null) window.scrollTo(0, y);
+  }, []);
+  return null;
+}
+
 function RecipeCard({
   recipe,
+  index,
   showAuthor,
 }: {
   recipe: RecipeData;
+  index: number;
   showAuthor: boolean;
 }) {
   const line = airFryerLine(recipe.airFryer);
+  const ref = useReveal<HTMLButtonElement>(String(recipe.id), index);
   return (
     <button
+      ref={ref}
       type="button"
       onClick={() => navigate({ name: "recipe", id: recipe.id })}
       className="block w-full text-left transition-transform active:scale-[0.99]"
     >
-      <Card className="h-full transition-all hover:border-primary/50 hover:shadow-lg">
+      <Card className="h-full gap-0 py-0 transition-all hover:border-primary/50 hover:shadow-lg">
         <CardHeader className="space-y-1 p-4">
           <CardTitle className="text-lg leading-snug">{recipe.title}</CardTitle>
           {line && <p className="text-sm font-bold text-primary">{line}</p>}

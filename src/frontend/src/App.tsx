@@ -83,11 +83,18 @@ function Screen({
           state={listState}
           onChange={setListState}
           authors={multiAuthor && scope === "all" ? authors : []}
+          scope={scope}
           scopeToggle={scopeToggle}
         />
       );
     case "airFryer":
-      return <AirFryerPage recipes={scoped} scopeToggle={scopeToggle} />;
+      return (
+        <AirFryerPage
+          recipes={scoped}
+          scope={scope}
+          scopeToggle={scopeToggle}
+        />
+      );
     case "new":
       return <RecipeForm allRecipes={recipes} />;
     // Handled in App before sign-in; never reached here.
