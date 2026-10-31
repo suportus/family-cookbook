@@ -10,6 +10,7 @@
 
 - **install**: `pnpm install --prefer-offline`
 - **typecheck**: `pnpm typecheck`
+- **test**: `pnpm test` (Vitest; tests live next to the code as `*.test.ts`)
 - **lint fix**: `pnpm fix`
 - **build**: `pnpm build`
 

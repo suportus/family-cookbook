@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
 import AirFryerPage from "./components/AirFryerPage";
+import Footer from "./components/Footer";
 import Header from "./components/Header";
 import LoginScreen from "./components/LoginScreen";
 import { PrincipalDisplay } from "./components/PrincipalDisplay";
@@ -154,39 +155,44 @@ function MainApp() {
     // can be added with addUser.
     const denied = isAccessDenied(recipes.error);
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-2 text-center">
-            <CardTitle className="text-2xl font-bold">
-              {denied ? "Dostop zavrnjen" : "Napaka pri povezavi"}
-            </CardTitle>
-            <CardDescription className="text-base">
-              {denied
-                ? "Vaš račun še nima dostopa. Spodnji principal pošljite skrbniku, da vas doda."
-                : "Povezava z zaledjem ni uspela. Poskusite znova pozneje."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <PrincipalDisplay principal={identity.getPrincipal().toText()} />
-            </div>
-            {!denied && (
-              <Button onClick={() => recipes.refetch()} className="w-full">
-                Poskusi znova
+      <div className="flex min-h-screen flex-col">
+        <div className="flex flex-1 items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="space-y-2 text-center">
+              <CardTitle className="text-2xl font-bold">
+                {denied ? "Dostop zavrnjen" : "Napaka pri povezavi"}
+              </CardTitle>
+              <CardDescription className="text-base">
+                {denied
+                  ? "Vaš račun še nima dostopa. Spodnji principal pošljite skrbniku, da vas doda."
+                  : "Povezava z zaledjem ni uspela. Poskusite znova pozneje."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg bg-muted/50 px-3 py-2">
+                <PrincipalDisplay
+                  principal={identity.getPrincipal().toText()}
+                />
+              </div>
+              {!denied && (
+                <Button onClick={() => recipes.refetch()} className="w-full">
+                  Poskusi znova
+                </Button>
+              )}
+              <Button
+                onClick={() => {
+                  clear();
+                  queryClient.clear();
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Odjava
               </Button>
-            )}
-            <Button
-              onClick={() => {
-                clear();
-                queryClient.clear();
-              }}
-              variant="outline"
-              className="w-full"
-            >
-              Odjava
-            </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -208,6 +214,7 @@ function MainApp() {
           <Spinner />
         )}
       </main>
+      <Footer belowFab={route.name === "list"} />
     </div>
   );
 }

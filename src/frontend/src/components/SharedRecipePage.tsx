@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { useSharedRecipe } from "../hooks/useQueries";
 import { useMemoryTicks } from "../hooks/useTicks";
+import Footer from "./Footer";
 import RecipeDetails from "./RecipeDetails";
 
 // A recipe opened from a read-only share link: no sign-in, no editing, no
@@ -82,9 +83,7 @@ export default function SharedRecipePage({ token }: { token: string }) {
         )}
       </main>
 
-      <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-        Družinska kuharica
-      </footer>
+      <Footer />
     </div>
   );
 }

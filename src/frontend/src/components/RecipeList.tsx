@@ -90,7 +90,7 @@ export default function RecipeList({
   useEffect(() => markFirstLoadDone(), []);
 
   return (
-    <div className="container px-4 py-4 pb-28">
+    <div className="container px-4 py-4 pb-2">
       <div className="sticky top-16 z-40 -mx-4 space-y-3 bg-background/95 px-4 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
