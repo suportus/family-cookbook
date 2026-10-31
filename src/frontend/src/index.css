@@ -90,11 +90,26 @@
 }
 
 /* ---------- Animations (see hooks/useReveal.ts) ----------
-   Only opacity and transform, so nothing shifts the layout. */
+   Tune them here. Only opacity and transform are animated, so nothing shifts
+   the layout. */
+:root {
+  --card-anim-duration: 350ms;
+  --card-anim-distance: 16px; /* cards slide up from this far below */
+  --card-anim-ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out */
+  /* Cards on screen when the list loads: delay = min(n × stagger, max). */
+  --card-anim-stagger: 40ms;
+  --card-anim-max-delay: 400ms;
+  /* Cards that scroll into view together. */
+  --card-anim-batch-stagger: 30ms;
+  --card-anim-batch-max-delay: 150ms;
+  /* New results after a tag, Vsi/Moji, author or sort change. */
+  --results-fade-duration: 180ms;
+}
+
 @keyframes card-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(var(--card-anim-distance));
   }
   to {
     opacity: 1;
@@ -111,18 +126,33 @@
   }
 }
 
-/* A card below the screen, waiting to fade in. */
+/* A card off screen, waiting to fade in when it scrolls into view. */
 [data-reveal="pending"] {
   opacity: 0;
 }
 
-[data-reveal="in"] {
-  animation: card-in 220ms ease-out both;
+/* --i: the card's number among those animating together. */
+[data-reveal="load"],
+[data-reveal="scroll"] {
+  animation: card-in var(--card-anim-duration) var(--card-anim-ease) both;
 }
 
-/* New results after a filter or sort change. */
+[data-reveal="load"] {
+  animation-delay: min(
+    calc(var(--i, 0) * var(--card-anim-stagger)),
+    var(--card-anim-max-delay)
+  );
+}
+
+[data-reveal="scroll"] {
+  animation-delay: min(
+    calc(var(--i, 0) * var(--card-anim-batch-stagger)),
+    var(--card-anim-batch-max-delay)
+  );
+}
+
 .results-fade {
-  animation: results-in 180ms ease-out;
+  animation: results-in var(--results-fade-duration) ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

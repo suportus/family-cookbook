@@ -29,6 +29,11 @@ import { CyclesDialog } from "./CyclesDialog";
 import ImportTextDialog from "./ImportTextDialog";
 import SharesDialog from "./SharesDialog";
 
+// Round header buttons. The hover background only on devices with a real
+// mouse: after a tap on a phone, :hover stays on and left a square behind.
+const HEADER_BUTTON_HOVER =
+  "hover:bg-transparent dark:hover:bg-transparent [@media(hover:hover)]:hover:bg-accent [@media(hover:hover)]:dark:hover:bg-accent/50";
+
 export default function Header({ route }: { route: Route }) {
   const { clear } = useInternetIdentity();
   const { theme, setTheme } = useTheme();
@@ -73,7 +78,7 @@ export default function Header({ route }: { route: Route }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-11 w-11"
+              className={`h-11 w-11 rounded-full ${HEADER_BUTTON_HOVER}`}
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -85,7 +90,7 @@ export default function Header({ route }: { route: Route }) {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative h-11 w-11 rounded-full p-0"
+                  className={`relative h-11 w-11 rounded-full p-0 ${HEADER_BUTTON_HOVER}`}
                   aria-label="Meni"
                 >
                   <Avatar className="h-10 w-10">
